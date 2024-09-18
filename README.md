@@ -8,7 +8,7 @@
 生成グラフ例
 
 ![箱ひげ図](docs/single_ex.png)
-![時系列グラフ](docs/time_series_ex.png)
+![時系列グラフ](docs/ts_ex.png)
 
 ## 環境 (動作確認済み)
 
