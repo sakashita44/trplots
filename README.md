@@ -1,8 +1,8 @@
-# visualize
+# DataVisualize
 
 ## 概要
 
-* 規程形式の入力データをグラフ化する
+* 規程形式の入力データをグラフ(箱ひげ図or線グラフ)化する
 * (option) データの概要を出力する
 
 生成グラフ例
@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ### 実行
 
 1. visualize/Input/に指示ファイル，データファイルを配置する(詳細は以下)
-1. visualize/config.ymlを編集する
+1. templateをコピーしてconfig.ymlに名前を変更し，編集する
 1. 以下のコマンドを実行する
 
 ```bash
@@ -153,7 +153,7 @@ frame, condition1, condition1, condition2, condition2
 
 * グラフ出力等に関する設定を記述する
 * visualize/に配置する
-* 詳細はconfig.yml-template参考画像を参照
+* 詳細はconfig.yml-templateや参考画像を参照
     * [フォント](docs/fonts.png)
     * [位置](docs/locs.png)
 
