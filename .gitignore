@@ -1,0 +1,14 @@
+*.csv
+*.bak
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bac
+.venv
+.git
+tmp/*
+config.yml
+*__pycache__*
+!*-example.csv
+!docs/*
