@@ -5,6 +5,11 @@
 * 規程形式の入力データをグラフ化する
 * (option) データの概要を出力する
 
+生成グラフ例
+
+![箱ひげ図](docs/single_ex.png)
+![時系列グラフ](docs/time_series_ex.png)
+
 ## 環境 (動作確認済み)
 
 * Python 3.12.2
