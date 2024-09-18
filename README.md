@@ -39,7 +39,23 @@ python src/gen_graph.py
 ## ファイル構成
 
 ```plaintext
-visualize/
+DataVisualize/
+│  .gitignore
+│  config.yml
+│  config.yml-template
+│  README.md
+│  requestments.txt
+├─docs
+├─Inputs-example
+│      instructions-example.csv
+│      single-example.csv
+│      time_seriese-example.csv
+├─Inputs
+├─Outputs
+└─src
+      gen_graph.py
+      graph.py
+
 ```
 
 ## 入力
