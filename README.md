@@ -114,22 +114,19 @@ exampleファイル，brackets系は[参考画像](docs/brackets.png)も参照�
     * 3列目: 条件
         * 3列の条件別に箱ひげ図として出力される
         * 条件名は指示ファイルのlegendで指定したものに対応させる
-    * 4列目: グループ
-        * 箱ひげ図の横軸のグループ分けに使用
-            * グループが1つしかない場合は指定不要
 
 ```csv
-id, value, condition, group
-1, 10, TRUE, 1
-2, 20, TRUE, 1
-3, 30, TRUE, 2
-4, 40, TRUE, 2
-5, 50, FALSE, 1
-6, 60, FALSE, 1
-7, 70, FALSE, 2
-8, 80, FALSE, 2
-9, 90, TRUE, 3
-10, 100, TRUE, 3
+id, value, condition
+1, 10, TRUE
+2, 20, TRUE
+3, 30, TRUE
+4, 40, TRUE
+5, 50, FALSE
+6, 60, FALSE
+7, 70, FALSE
+8, 80, FALSE
+9, 90, TRUE
+10, 100, TRUE
 
 ```
 
