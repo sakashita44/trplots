@@ -176,8 +176,6 @@ def save_set_graph(inst: dict, config: dict):
     else:
         ax = gen_single_graph(data, ax, inst, config)
 
-    # TODO: Individualグラフの保存
-
     ax = set_ax_inst(ax, inst)
     save_graphs(fig, inst['output_name'], dpi)
 
@@ -188,6 +186,15 @@ def save_set_graph(inst: dict, config: dict):
         save_describe(data, inst)
 
     plt.close()
+
+    # 個別のデータをプロットしたグラフを保存
+    if config["save_individual"] and inst["is_time_series"]:
+        fig, ax = plt.subplots()
+        fig.set_size_inches(figure_width, figure_height)
+        ax = gen_time_series_individual_graph(data, ax, inst)
+        ax = set_ax_inst(ax, inst)
+        save_graphs(fig, inst['output_name'] + "_individual", dpi)
+        plt.close()
 
 def save_graphs(fig: plt.Figure, output_name: str, dpi: int):
     out_path = os.path.join(OUTPUT_DIR, output_name)
