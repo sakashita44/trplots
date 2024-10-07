@@ -9,6 +9,7 @@
 
 生成グラフ例
 
+// TODO: 画像の変更(箱ひげ図: グループ化がわかるもの，時系列グラフ: 個別のものの追加)
 ![箱ひげ図](docs/single_ex.png)
 ![時系列グラフ](docs/ts_ex.png)
 
@@ -21,6 +22,8 @@
 
 ### 準備
 
+// TODO: 環境構築スクリプトの追加
+
 1. このリポジトリをクローンする
 1. 以下のコマンドを実行し，必要なライブラリをインストールする
 
@@ -29,6 +32,8 @@ pip install -r requirements.txt
 ```
 
 ### 実行
+
+// TODO: 実行方法の変更
 
 1. visualize/Input/に指示ファイル，データファイルを配置する(詳細は以下)
 1. templateをコピーしてconfig.ymlに名前を変更し，編集する
@@ -39,6 +44,8 @@ python src/gen_graph.py
 ```
 
 ## ファイル構成
+
+// TODO: ファイル構成の変更
 
 ```plaintext
 DataVisualize/
@@ -65,6 +72,8 @@ DataVisualize/
 * 以下の通り1つの指示ファイルと1つ以上のデータファイル，config.ymlを用意する
 
 ### 指示ファイル
+
+// TODO: 指示ファイルの形式変更(examplesを参考に)
 
 Input/にinstructions.csvを配置し，以下の通り記述する．
 なお2列目以降は例であり，実際には必要な列数だけ記述する．
@@ -107,6 +116,8 @@ exampleファイル，brackets系は[参考画像](docs/brackets.png)も参照�
 ### データファイル
 
 #### 試行ごとに単発のパラメータとして出力されるもの
+
+// TODO: group列の追加，group列の効果を示す例(画像)の追加
 
 例: 歩行終了距離
 
@@ -153,6 +164,8 @@ frame, condition1, condition1, condition2, condition2
 
 ### config.yml
 
+// TODO: 配置位置の変更，説明画像の変更
+
 * グラフ出力等に関する設定を記述する
 * visualize/に配置する
 * 詳細はconfig.yml-templateや参考画像を参照
@@ -163,94 +176,3 @@ frame, condition1, condition1, condition2, condition2
 
 * Output/にグラフが出力される
 * config.ymlでグラフ出力に関する設定を変更可能
-
-## 処理内容
-
-### src/graph.py
-
-#### single_graph関数
-
-seaborn.boxplotのラッパー風関数
-
-1. 引数
-    1. pandas.DataFrame
-        * 1列目: trial_id(試行番号)
-        * 2列目: parameter※(パラメータ) ※ファイルにより異なる
-        * 3列目: is_assist_continue(実験のアシスト条件(TRUE/FALSE) またはPGT(null))
-    1. ax: matplotlib.pyplot.Axes
-    1. plotのその他引数(x, y, axを除く)
-1. 返り値
-    1. seaborn.boxplotの返り値
-    1. 使用したデータの概要(pandas.DataFrame)
-1. 処理
-    1. 3列目の値で分類して箱ひげ図をax.boxplot内に作成
-    1. また，箱ひげ図内に外れ値を除いた平均値をxでプロット
-    1. この関数外部でx軸の範囲等を設定する
-
-#### add_brackets関数
-
-箱ひげ図に有意差を示す線を追加する関数
-
-1. 引数
-    1. ax: matplotlib.pyplot.Axes
-    1. brackets: 有意差を示すタプルのリスト (例: [(1, 2, '*'), (2, 3, '**')])
-    1. bracket_base_y: 有意差を示す線の最低y座標 (デフォルトはNone)
-    1. dh: 有意差線の高さの増分 (デフォルトは1)
-    1. fs: フォントサイズ (デフォルトは10)
-1. 返り値
-    1. なし
-1. 処理
-    1. bracketsの各タプルについて、指定された位置に有意差を示す線とアスタリスクを追加
-    1. bracket_base_yがNoneの場合、y軸の最大値に基づいて自動的に設定
-        * この場合y軸の最大値は自動的に変更されてしまうため注意
-    1. dhに基づいて各有意差線の高さを調整
-    1. fsに基づいてアスタリスクのフォントサイズを設定
-
-#### time_series_graph関数
-
-seaborn.lineplotとseaborn.betweenplotを組み合わせた関数
-
-1. 引数
-    1. pandas.DataFrame
-        * 1列目: frame
-        * 2列目以降: parameter※(パラメータ) ※ファイルにより異なる
-    1. plotのその他引数(x, yを除く)
-1. 返り値
-    1. ax.plotの返り値
-1. 処理
-    1. 2列目以降の値について，ヘッダ毎に平均値を実数，標準偏差を網掛けでプロット
-    1. この関数外部でx軸の範囲等を設定する
-
-#### **_describe関数
-
-グラフ出力時に渡したデータと同じデータを入力することで，そのデータの概要をcsv形式で出力する関数
-
-#### set_ax関数
-
-axの設定を行う関数
-
-1. 引数
-    1. ax: matplotlib.pyplot.Axes
-    1. xlabel: x軸のラベル名
-    1. ylabel: y軸のラベル名
-    1. xlim: x軸の範囲 (デフォルトはNone)
-    1. ylim: y軸の範囲 (デフォルトはNone)
-    1. is_time_series: 時系列データかどうか (デフォルトはFalse)
-1. 返り値
-    1. ax: matplotlib.pyplot.Axes
-1. 処理
-    1. config.ymlからフォントサイズを読み込み、axに設定
-    1. x軸、y軸のラベル名を設定
-    1. x軸、y軸の範囲を設定
-    1. ラベルの配置を設定
-    1. グリッドを点線で表示
-    1. is_time_seriesがTrueの場合、x軸のメモリを整数にし、凡例のフォントサイズを設定
-    1. is_time_seriesがFalseの場合、凡例を非表示に設定
-
-### src/gen_graph.py
-
-* このファイルを実行することで指示ファイルに従ってグラフを生成する
-* このファイルをpythonで実行するとgen_graph関数が実行される
-* gen_graph関数は以下の処理を行う
-    1. 指示ファイルを読み込む
-    1. 指示ファイル内の各列ごとにグラフを生成する
