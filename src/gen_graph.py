@@ -54,15 +54,21 @@ def read_instructions():
         else:
             inst_dict["legend"] = {}
 
-        # Convert the brackets to a list of taple(int, int, str)
-        # ex 1:2:*.1:3:** -> [(1, 2, "*"), (1, 3, "**")]
+        # Convert the brackets to a list of taple([int, int], [int, int], str)
+        # ex [1:1][1:2]*.[1:3][2:3]** -> [([1, 1], [1, 2], "*"), ([1, 3], [2, 3], "**")]
         if inst_dict["brackets"] != "":
             brackets = inst_dict["brackets"]
             brackets = brackets.split(".")
-            brackets = [b.strip() for b in brackets]
-            brackets = [b.split(":") for b in brackets]
-            brackets = [(int(b[0]), int(b[1]), b[2]) for b in brackets]
-            inst_dict["brackets"] = brackets
+            b_ret = []
+            for b in brackets:
+                b = b.split("]")
+                b = [item.replace("[", "") for item in b if item]
+                b = [item.split(":") for item in b]
+                b[0] = int(b[0][0]), int(b[0][1])
+                b[1] = int(b[1][0]), int(b[1][1])
+                b[2] = b[2][0]
+                b_ret.append(b)
+            inst_dict["brackets"] = b_ret
         else:
             inst_dict["brackets"] = []
 
@@ -92,10 +98,8 @@ def read_config():
 
     return config
 
-
 def gen_single_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict, config: dict):
-    hue = data.columns[2]
-    ax = graph.single_graph(data, ax, hue = hue)
+    ax = graph.concat_single_graph(data, ax)
 
     xtick_old = []
     xtick_new = []
@@ -107,7 +111,7 @@ def gen_single_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict, config: dict)
 
     if config["add_brackets"]:
         if inst["brackets"] != []:
-            graph.add_brackets(ax, inst["brackets"], bracket_base_y = inst["bracket_base_y"], dh = config["brackets_dh"], fs=config["p_mark_font_size"])
+            graph.add_brackets_for_concat_single(ax, inst["brackets"], bracket_base_y = inst["bracket_base_y"], dh = config["brackets_dh"], fs=config["p_mark_font_size"])
 
     return ax
 
@@ -127,7 +131,12 @@ def gen_time_series_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict):
 
     return ax
 
-def set_ax_inst(ax, inst, config):
+def gen_time_series_individual_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict):
+    ax = graph.time_series_indiv_graph(data, ax)
+
+    return ax
+
+def set_ax_inst(ax, inst):
     xlabel = inst["xlabel"]
     ylabel = inst["ylabel"]
     xlim_min = inst["xlim_min"]
@@ -144,7 +153,7 @@ def set_ax_inst(ax, inst, config):
         ylim = None
     is_time_series = inst["is_time_series"]
 
-    ax = graph.set_ax(ax = ax, xlabel = xlabel, ylabel = ylabel, config = config, xlim = xlim, ylim = ylim, is_time_series = is_time_series)
+    ax = graph.set_ax(ax, xlabel, ylabel, xlim, ylim, is_time_series)
 
     return ax
 
@@ -152,13 +161,13 @@ def test_path(dir_path: str):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
-def save_graph(inst: dict, config: dict):
-    fig, ax = plt.subplots()
+def save_set_graph(inst: dict, config: dict):
+    data = read_data(inst["filename"])
     dpi = config["figure_dpi"]
     figure_width = config["figure_width"]
     figure_height = config["figure_height"]
+    fig, ax = plt.subplots()
     fig.set_size_inches(figure_width, figure_height)
-    data = read_data(inst["filename"])
 
     if inst["is_time_series"]:
         # dataの1列目の名前をframeに変更
@@ -167,18 +176,24 @@ def save_graph(inst: dict, config: dict):
     else:
         ax = gen_single_graph(data, ax, inst, config)
 
-    ax = set_ax_inst(ax, inst, config)
+    # TODO: Individualグラフの保存
+
+    ax = set_ax_inst(ax, inst)
+    save_graphs(fig, inst['output_name'], dpi)
 
     if config["show_graph"]:
         plt.show()
-    out_path = os.path.join(OUTPUT_DIR, inst['output_name'])
-    test_path(os.path.dirname(out_path))
-    fig.savefig(out_path, dpi=dpi)
 
     if config["save_describe"]:
         save_describe(data, inst)
 
     plt.close()
+
+def save_graphs(fig: plt.Figure, output_name: str, dpi: int):
+    out_path = os.path.join(OUTPUT_DIR, output_name)
+    test_path(os.path.dirname(out_path))
+
+    fig.savefig(out_path, dpi=dpi)
 
 def save_describe(data: pd.DataFrame, inst: dict):
     if inst["is_time_series"]:
@@ -196,7 +211,7 @@ def gen_graph():
     for inst in instructions:
         # グラフを確認しつつ保存
         print(f"Generating {inst['output_name']}")
-        save_graph(inst, config)
+        save_set_graph(inst, config)
 
 if __name__ == "__main__":
     gen_graph()

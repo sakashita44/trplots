@@ -1,3 +1,3 @@
 output_name,filename,is_time_series,xlim_min,xlim_max,ylim_min,ylim_max,xlabel,ylabel,legend,brackets,bracket_base_y
-single_ex,single-example.csv,FALSE,,,15,90,condition,value(unit),condition1:con1.condition2:con2.condition3:con3,1:2:*.1:3:**,75
+single_ex,single-example.csv,FALSE,,,15,90,condition,value(unit),condition1:con1.condition2:con2.condition3:con3,[1:1][1:2]*.[1:1][2:1]**,75
 ts_ex,time_seriese-example.csv,TRUE,0,100,-200,350,frame(1/100 s),value(unit),condition1:ts1.condition2:ts2.condition3:ts3,,
