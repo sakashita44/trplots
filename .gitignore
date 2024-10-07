@@ -9,6 +9,7 @@
 .git
 tmp/*
 config.yml
+Inputs/*
 *__pycache__*
 !*-example.csv
 !docs/*
