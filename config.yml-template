@@ -25,3 +25,4 @@ p_mark_font_size: 10  # p値のフォントサイズ(デフォルト: 10): dhが
 # 保存時の設定
 show_graph: False     # グラフ保存時に表示するか(デフォルト: False)
 save_describe: True   # 保存時にデータの概要を保存するかどうか(デフォルト: True)
+save_individual: True # 時系列データのグラフ化時に，個々のデータをプロットした画像も保存するか(デフォルト: True)
