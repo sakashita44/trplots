@@ -11,8 +11,8 @@
 .github
 tmp/*
 config.yml
-Inputs/*
 Outputs/*
 *__pycache__*
 !*-example.csv
 !docs/*
+Inputs/*
