@@ -102,6 +102,7 @@ output2, data2.csv, FALSE,,,20, 50, condition, parameter2,True:continue.False:st
 1. ylabel: y軸のラベル，$$で囲むことでLaTex数式記法使用可能 (**必須**)
 1. legend: 入力csvの列名と凡例の対応表(コロンで対応，ピリオドで区切り)
     * 例: Trueをcontinue，Falseをstop，空文字をPGTというラベルにしたい場合: True:continue.False:stop.:PGT
+    * **注意**: データファイルの列名でTRUE/FALSEを使用している場合，True/Falseとして認識されるので注意
 1. brackets: 有意差の対応表(コロンで対応，ピリオドで区切り)
     * 指定した順に下から追加される
     * 数字は左から順に1, 2, 3...と対応
