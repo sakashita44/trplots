@@ -1,10 +1,8 @@
 ---
 name: 機能追加 Issue template
 about: 機能追加時のIssueのテンプレート
-title: '[feat]'
+title: '[FEAT]'
 labels: enhancement
-assignees: sakashita44
-
 ---
 
 ## 概要
