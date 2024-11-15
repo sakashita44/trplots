@@ -200,5 +200,3 @@ frame, condition1, condition1, condition2, condition2
 
 * Output/にグラフが出力される
 * config.ymlでグラフ出力に関する設定を変更可能
-
-* v2.0.0時点でlegendの変更が行えない
