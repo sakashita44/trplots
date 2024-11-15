@@ -18,7 +18,7 @@ figure_width:  8      # 画像の幅(デフォルト: 4?)
 figure_height: 6      # 画像の高さ(デフォルト: 3?)
 
 # 箱ひげ図への有意差の表示に関する設定
-add_brackets: False   # 箱ひげ図に有意差を示すかどうか(デフォルト: True)
+add_brackets: True    # 箱ひげ図に有意差を示すかどうか(デフォルト: True)
 brackets_dh: 5        # ブラケット同士の間隔(デフォルト: 5)
 p_mark_font_size: 10  # p値のフォントサイズ(デフォルト: 10): dhが小さいときにfont_sizeを大きくすると線と重なるので注意
 

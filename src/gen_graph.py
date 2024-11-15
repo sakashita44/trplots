@@ -101,14 +101,6 @@ def read_config():
 def gen_single_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict, config: dict):
     ax = graph.concat_single_graph(data, ax)
 
-    xtick_old = []
-    xtick_new = []
-    for key, value in inst["legend"].items():
-        xtick_old.append(key)
-        xtick_new.append(value)
-
-    ax.set_xticks(xtick_old, xtick_new)
-
     if config["add_brackets"]:
         if inst["brackets"] != []:
             graph.add_brackets_for_concat_single(ax, inst["brackets"], bracket_base_y = inst["bracket_base_y"], dh = config["brackets_dh"], fs=config["p_mark_font_size"])
