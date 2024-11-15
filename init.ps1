@@ -18,3 +18,18 @@ if (-not (Test-Path .\.venv)) {
 
 # Install dependency packages
 python -m pip install -r etc\requirements.txt
+
+# If Input directory does not exist, create it
+if (-not (Test-Path .\Inputs)) {
+    New-Item -ItemType Directory -Name Inputs
+}
+
+# If Output directory does not exist, create it
+if (-not (Test-Path .\Outputs)) {
+    New-Item -ItemType Directory -Name Outputs
+}
+
+# If Inputs\instructions.csv does not exist, copy etc\instructions.csv-template to create it
+if (-not (Test-Path .\Inputs\instructions.csv)) {
+    Copy-Item .\etc\instructions.csv-template .\Inputs\instructions.csv
+}

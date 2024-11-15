@@ -69,6 +69,7 @@ DataVisualize/
 │
 ├─etc
 │      config.yml-template
+│      instructions.csv-template
 │      requirements.txt
 │
 ├─Inputs
