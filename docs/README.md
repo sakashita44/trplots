@@ -38,11 +38,10 @@
 
 1. Input/に指示ファイル，データファイルを配置する(詳細は以下)
 1. config.ymlを編集する
-1. venv環境下でgen_graph.pyを実行する (以下はPowerShellの場合)
+1. run.ps1を実行する
 
 ```powershell
-./venv/Scripts/Activate.ps1
-py src/gen_graph.py     # または python src/gen_graph.py
+./run.ps1
 ```
 
 ## ファイル構成
@@ -52,7 +51,7 @@ DataVisualize/
 │  .gitignore
 │  config.yml
 │  init.ps1
-│  tree.txt
+|  run.ps1
 │
 ├─docs
 │  │  CHANGELOG.md

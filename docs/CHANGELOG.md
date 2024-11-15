@@ -16,6 +16,7 @@ and versioning is based on [Semantic Versioning](http://semver.org/).
 
 * init.ps1に入出力ディレクトリを自動生成するスクリプトを追加
 * init.ps1にinstructions.csvを生成するスクリプトを追加
+* run.ps1を追加
 
 ## [2.0.1] 2024-11-15 (sakashita44)
 
