@@ -10,6 +10,13 @@ and versioning is based on [Semantic Versioning](http://semver.org/).
 * 箱ひげ図へのハッチング機能を追加
 * legendの変更機能を追加
 
+## [2.0.1] 2024-10-08 (sakashita44)
+
+### Fixed in 2.0.1
+
+* ディレクトリ構造を変更
+* ディレクトリ構造変更に伴うパスの修正
+
 ## [2.0.0] 2024-10-08 (sakashita44)
 
 ### Added in 2.0.0
