@@ -109,12 +109,19 @@ def concat_single_graph(df: pd.DataFrame, ax, **kwargs):
 
     x_col_name, y_col_name = get_colname(df, False)
     # 4列目が存在しない場合は列を追加
+    no_group = False
     if len(df.columns) < 4:
         df['group'] = ''
+    # groupに1種類の値しかない場合はno_groupをTrueにする
+    if len(df['group'].unique()) == 1:
+        no_group = True
     group_name = df.columns[3]
 
     # 箱ひげ図を作成
-    ax = sns.boxplot(x=group_name, y=y_col_name, hue=x_col_name, data=df, ax=ax, **kwargs)
+    if not no_group:
+        ax = sns.boxplot(x=group_name, y=y_col_name, hue=x_col_name, data=df, ax=ax, **kwargs)
+    else:
+        ax = sns.boxplot(x=x_col_name, y=y_col_name, hue=x_col_name, data=df, ax=ax, **kwargs)
 
     boxwidth = get_boxwidth(ax)
 

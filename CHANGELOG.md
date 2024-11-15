@@ -5,7 +5,10 @@ and versioning is based on [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-* 箱ひげ図のブラケットの高さの指定
+* 箱ひげ図のブラケットの高さの指定機能を追加
+* 単発データのviolin plot出力機能を追加
+* 箱ひげ図へのハッチング機能を追加
+* legendの変更機能を追加
 
 ## [2.0.0] 2024-10-08 (sakashita44)
 
