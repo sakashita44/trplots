@@ -5,7 +5,7 @@ Set-Location $PSScriptRoot
 
 # If config.yml does not exist, copy config.yml-template to create it
 if (-not (Test-Path .\config.yml)) {
-    Copy-Item .\config.yml-template .\config.yml
+    Copy-Item .\etc\config.yml-template .\config.yml
 }
 
 # If .venv does not exist, create a virtual environment
@@ -17,4 +17,4 @@ if (-not (Test-Path .\.venv)) {
 . .\.venv\Scripts\Activate.ps1
 
 # Install dependency packages
-pip install -r requirements.txt
+python -m pip install -r etc\requirements.txt
