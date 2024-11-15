@@ -8,7 +8,7 @@ and versioning is based on [Semantic Versioning](http://semver.org/).
 * 箱ひげ図のブラケットの高さの指定機能を追加
 * 単発データのviolin plot出力機能を追加
 * 箱ひげ図へのハッチング機能を追加
-* legendの変更機能を追加
+* 箱ひげ図のgroup名を変更する機能を追加
 
 ## [2.1.1] 2024-11-15 (sakashita44)
 
