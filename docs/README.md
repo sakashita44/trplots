@@ -9,9 +9,9 @@
 
 <summary>生成グラフ例</summary>
 
-![箱ひげ図](docs/img/single_ex.png)
-![時系列グラフ](docs/img/ts_ex.png)
-![時系列グラフ(個別)](docs/img/ts_ex_individual.png)
+![箱ひげ図](img/single_ex.png)
+![時系列グラフ](img/ts_ex.png)
+![時系列グラフ(個別)](img/ts_ex_individual.png)
 
 </details>
 
@@ -27,7 +27,7 @@
 
 ### 準備
 
-1. このリポジトリをクローンする
+1. このリポジトリをクローンまたは最新リリースのzipファイルをダウンロードする
 1. init.ps1を実行する
 
 ```powershell
@@ -36,8 +36,8 @@
 
 ### 実行
 
-1. visualize/Input/に指示ファイル，データファイルを配置する(詳細は以下)
-1. templateをコピーしてconfig.ymlに名前を変更し，編集する
+1. Input/に指示ファイル，データファイルを配置する(詳細は以下)
+1. config.ymlを編集する
 1. venv環境下でgen_graph.pyを実行する (以下はPowerShellの場合)
 
 ```powershell
@@ -49,6 +49,38 @@ py src/gen_graph.py     # または python src/gen_graph.py
 
 ```plaintext
 DataVisualize/
+│  .gitignore
+│  config.yml
+│  init.ps1
+│  tree.txt
+│
+├─docs
+│  │  CHANGELOG.md
+│  │  LICENSE
+│  │  README.md
+│  │
+│  └─img
+│          fonts.png
+│          locs.png
+│          single_ex.png
+│          single_ex_description.png
+│          ts_ex.png
+│          ts_ex_individual.png
+│
+├─etc
+│      config.yml-template
+│      requirements.txt
+│
+├─Inputs
+├─Inputs-example
+│      instructions-example.csv
+│      single-example.csv
+│      time_series-example.csv
+│
+├─Outputs
+└─src
+        gen_graph.py
+        graph.py
 ```
 
 ## 入力
@@ -102,7 +134,7 @@ output2, data2.csv, FALSE,,,20, 50, condition, parameter2,True:continue.False:st
 1. bracket_base_y: 箱ひげ図の有意差を示す線の最低y座標
     * データの最大値より大きい値を指定することを推奨
 
-exampleファイル，brackets系は[参考画像](docs/img/single_ex_description.png)も参照のこと
+exampleファイル，brackets系は[参考画像](img/single_ex_description.png)も参照のこと
 
 ### データファイル
 
@@ -115,7 +147,7 @@ exampleファイル，brackets系は[参考画像](docs/img/single_ex_descriptio
         * 3列の条件別に箱ひげ図として出力される
         * 条件名は指示ファイルのlegendで指定したものに対応させる
     * 4列目: グループ
-        * 4列のグループ別に箱ひげ図として出力される [参考画像](docs/img/single_ex_description.png)
+        * 4列のグループ別に箱ひげ図として出力される [参考画像](img/single_ex_description.png)
 
 ```csv
 id, value, condition, group
@@ -160,8 +192,8 @@ frame, condition1, condition1, condition2, condition2
 <details>
 <summary>設定参考画像</summary>
 
-![フォント](docs/img/fonts.png)
-![位置](docs/img/locs.png)
+![フォント](img/fonts.png)
+![位置](img/locs.png)
 </details>
 
 ## 出力
