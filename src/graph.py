@@ -4,8 +4,6 @@ import seaborn as sns
 import pandas as pd
 import yaml
 
-config_path = 'config.yml'
-
 def concat_single_graph(df: pd.DataFrame, ax, **kwargs):
     """seaborn.boxplotに処理を追加した関数
     heuに対応した箱ひげ図を作成
@@ -366,34 +364,67 @@ def time_series_describe(df: pd.DataFrame):
 
     return describe
 
-def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False):
+def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False, legend_correspondence_dict={}, label_font_size=None, tick_font_size=None, legend_font_size=None, graph_limit_left=None, graph_limit_right=None, graph_limit_bottom=None, graph_limit_top=None, xlabel_loc_x=None, xlabel_loc_y=None, ylabel_loc_x=None, ylabel_loc_y=None):
     """axに対してconfig.ymlで指定したデフォルトのフォントサイズを設定する
     同時にx軸，y軸のラベル名を設定し，グラフの大きさを設定する
 
     Args:
         ax: matplotlib.pyplot.Axes
-        xlabel: x軸のラベル名
-        ylabel: y軸のラベル名
-        xlim: x軸の範囲
-        ylim: y軸の範囲
+        xlabel: str
+            x軸のラベル名
+        ylabel: str
+            y軸のラベル名
+        xlim: double
+            x軸の範囲
+        ylim: double
+            y軸の範囲
+        is_time_series: bool
+            True: 時系列データの場合
+            False: 時系列データでない場合
+        legend_correspondence_dict: dict
+            凡例のラベルを変更するための辞書
+        label_font_size: int
+            ラベルのフォントサイズ
+        tick_font_size: int
+            目盛りのフォントサイズ
+        legend_font_size: int
+            凡例のフォントサイズ
+        graph_limit_left: float
+            グラフの左端の位置
+        graph_limit_right: float
+            グラフの右端の位置
+        graph_limit_bottom: float
+            グラフの下端の位置
+        graph_limit_top: float
+            グラフの上端の位置
+        xlabel_loc_x: float
+            x軸ラベルの位置(x位置)
+        xlabel_loc_y: float
+            x軸ラベルの位置(y位置)
+        ylabel_loc_x: float
+            y軸ラベルの位置(x位置)
+        ylabel_loc_y: float
+            y軸ラベルの位置(y位置)
 
     Returns:
         ax: matplotlib.pyplot.Axes
     """
-    with open(config_path, encoding="utf-8") as file:
-        config = yaml.safe_load(file)
-
     # フォントサイズを設定
-    ax.set_xlabel(xlabel, fontsize=config['label_font_size'])
-    ax.set_ylabel(ylabel, fontsize=config['label_font_size'])
-    ax.tick_params(labelsize=config['tick_font_size'])
+    if label_font_size is not None:
+        ax.set_xlabel(xlabel, fontsize=label_font_size)
+        ax.set_ylabel(ylabel, fontsize=label_font_size)
+    if tick_font_size is not None:
+        ax.tick_params(labelsize=tick_font_size)
 
     # グラフの大きさを設定(画像サイズを1とした場合の比率)
-    plt.gcf().subplots_adjust(left=config['graph_limit_left'], right=config['graph_limit_right'], bottom=config['graph_limit_bottom'], top=config['graph_limit_top'])
+    if graph_limit_left is not None and graph_limit_right is not None and graph_limit_bottom is not None and graph_limit_top is not None:
+        plt.gcf().subplots_adjust(left=graph_limit_left, right=graph_limit_right, bottom=graph_limit_bottom, top=graph_limit_top)
 
     # ラベル位置の調整
-    ax.xaxis.set_label_coords(config['xlabel_loc_x'], config['xlabel_loc_y'])
-    ax.yaxis.set_label_coords(config['ylabel_loc_x'], config['ylabel_loc_y'])
+    if xlabel_loc_x is not None and xlabel_loc_y is not None:
+        ax.xaxis.set_label_coords(xlabel_loc_x, xlabel_loc_y)
+    if ylabel_loc_x is not None and ylabel_loc_y is not None:
+        ax.yaxis.set_label_coords(ylabel_loc_x, ylabel_loc_y)
 
     # グリッドを点線で表示
     ax.grid(linestyle=':')
@@ -404,14 +435,24 @@ def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False):
     if ylim is not None:
         ax.set_ylim(ylim)
 
-    # is_time_seriesがTrueの場合，x軸のメモリを整数にし，凡例のフォントサイズを設定
+    # 現在のlegendを取得し，対応する新しいlegendを作成
+    handles, labels = ax.get_legend_handles_labels()
+    new_labels = []
+    # 新しいlegendを作成
+    if legend_correspondence_dict != {}:
+        for lb in labels:
+            new_labels.append(legend_correspondence_dict[lb])
+
+    # legendを設定
+    # 時系列データの場合は同じ文字列が複数表示されるのを防ぐ処理を追加
     if is_time_series:
-        ax.legend(fontsize=config['legend_font_size'])
         ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
         # 凡例に同じ文字列が複数表示されるのを防ぐ
         handles, labels = ax.get_legend_handles_labels()
-        by_label = dict(zip(labels, handles))
-        ax.legend(by_label.values(), by_label.keys())
+        by_label = dict(zip(new_labels, handles))
+        ax.legend(by_label.values(), by_label.keys(), fontsize=legend_font_size)
+    else:
+        ax.legend(handles, new_labels, fontsize=legend_font_size)
 
     return ax
 

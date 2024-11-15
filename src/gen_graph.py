@@ -107,28 +107,17 @@ def gen_single_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict, config: dict)
 
     return ax
 
-def gen_time_series_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict):
+def gen_time_series_graph(data: pd.DataFrame, ax: plt.Axes):
     ax = graph.time_series_graph(data, ax)
-
-    # FIXME: legendが変換できない
-    # 現在のlegendを取得
-    handles, labels = ax.get_legend_handles_labels()
-    # 新しいlegendを作成
-    if inst["legend"] != {}:
-        new_labels = []
-        for lb in labels:
-            new_labels.append(inst["legend"][lb])
-        # 新しいlegendを設定
-        ax.set_label(new_labels)
 
     return ax
 
-def gen_time_series_individual_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict):
+def gen_time_series_individual_graph(data: pd.DataFrame, ax: plt.Axes):
     ax = graph.time_series_indiv_graph(data, ax)
 
     return ax
 
-def set_ax_inst(ax, inst):
+def set_ax_wrap(ax, inst, config):
     xlabel = inst["xlabel"]
     ylabel = inst["ylabel"]
     xlim_min = inst["xlim_min"]
@@ -144,8 +133,23 @@ def set_ax_inst(ax, inst):
     else:
         ylim = None
     is_time_series = inst["is_time_series"]
+    legend_correspondence_dict = inst["legend"]
+    label_font_size = config["label_font_size"]
+    tick_font_size = config["tick_font_size"]
+    legend_font_size = config["legend_font_size"]
+    graph_limit_left = config["graph_limit_left"]
+    graph_limit_right = config["graph_limit_right"]
+    graph_limit_bottom = config["graph_limit_bottom"]
+    graph_limit_top = config["graph_limit_top"]
+    xlabel_loc_x = config["xlabel_loc_x"]
+    xlabel_loc_y = config["xlabel_loc_y"]
+    ylabel_loc_x = config["ylabel_loc_x"]
+    ylabel_loc_y = config["ylabel_loc_y"]
 
-    ax = graph.set_ax(ax, xlabel, ylabel, xlim, ylim, is_time_series)
+    ax = graph.set_ax(ax=ax, xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, is_time_series=is_time_series, legend_correspondence_dict=legend_correspondence_dict,\
+                     label_font_size=label_font_size, tick_font_size=tick_font_size, legend_font_size=legend_font_size,\
+                         graph_limit_left=graph_limit_left, graph_limit_right=graph_limit_right, graph_limit_top=graph_limit_top, graph_limit_bottom=graph_limit_bottom,\
+                             xlabel_loc_x=xlabel_loc_x, xlabel_loc_y=xlabel_loc_y, ylabel_loc_x=ylabel_loc_x, ylabel_loc_y=ylabel_loc_y)
 
     return ax
 
@@ -164,11 +168,11 @@ def save_set_graph(inst: dict, config: dict):
     if inst["is_time_series"]:
         # dataの1列目の名前をframeに変更
         data = data.rename(columns={data.columns[0]: "frame"})
-        ax = gen_time_series_graph(data, ax, inst)
+        ax = gen_time_series_graph(data, ax)
     else:
         ax = gen_single_graph(data, ax, inst, config)
 
-    ax = set_ax_inst(ax, inst)
+    ax = set_ax_wrap(ax, inst, config)
     save_graphs(fig, inst['output_name'], dpi)
 
     if config["show_graph"]:
@@ -183,8 +187,8 @@ def save_set_graph(inst: dict, config: dict):
     if config["save_individual"] and inst["is_time_series"]:
         fig, ax = plt.subplots()
         fig.set_size_inches(figure_width, figure_height)
-        ax = gen_time_series_individual_graph(data, ax, inst)
-        ax = set_ax_inst(ax, inst)
+        ax = gen_time_series_individual_graph(data, ax)
+        ax = set_ax_wrap(ax, inst, config)
         save_graphs(fig, inst['output_name'] + "_individual", dpi)
         plt.close()
 
