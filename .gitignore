@@ -7,7 +7,7 @@
 *.bac
 .venv
 .git
-.vscode
+.vscode/*
 .github
 tmp/*
 config.yml
