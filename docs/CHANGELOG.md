@@ -8,7 +8,16 @@ and versioning is based on [Semantic Versioning](http://semver.org/).
 * 箱ひげ図のブラケットの高さの指定機能を追加
 * 単発データのviolin plot出力機能を追加
 * 箱ひげ図へのハッチング機能を追加
-* legendの変更機能を追加
+* 箱ひげ図のgroup名を変更する機能を追加
+
+## [2.1.1] 2024-11-15 (sakashita44)
+
+### Fixed in 2.1.1
+
+* legendが変更されない問題を修正
+* singleデータの箱ひげ図でx軸が正しく設定されない問題を修正
+* graph.pyに存在した使用されていない箱ひげ図作成関数を削除
+* そのた細かな修正
 
 ## [2.1.0] 2024-11-15 (sakashita44)
 

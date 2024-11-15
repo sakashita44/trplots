@@ -3,8 +3,8 @@
 # Move to the directory where this script is located
 Set-Location $PSScriptRoot
 
-# Execute init.ps1
-./init.ps1
+# Activate the virtual environment
+. .\.venv\Scripts\Activate.ps1
 
 # Execute gen_graph.py
-python .src/gen_graph.py
+python .\src\gen_graph.py
