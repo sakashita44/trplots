@@ -442,6 +442,14 @@ def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False, legen
     if legend_correspondence_dict != {}:
         for lb in labels:
             new_labels.append(legend_correspondence_dict[lb])
+        if len(new_labels) == 0:
+            new_labels = labels
+        elif len(new_labels) != len(labels):
+            new_labels = labels
+            print("WARN: The number of legend correspondence input is not equal to the number of legend labels.")
+            print("WARN: The legend labels are not changed.")
+    else:
+        new_labels = labels
 
     # legendを設定
     # 時系列データの場合は同じ文字列が複数表示されるのを防ぐ処理を追加
