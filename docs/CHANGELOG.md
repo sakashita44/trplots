@@ -10,6 +10,12 @@ and versioning is based on [Semantic Versioning](http://semver.org/).
 * 箱ひげ図へのハッチング機能を追加
 * 箱ひげ図のgroup名を変更する機能を追加
 
+## [2.2.0] 2024-11-17 (sakashita44)
+
+### Added in 2.2.0
+
+* instructions.csvで指定したlegendの順番でグラフを出力する機能を追加
+
 ## [2.1.2] 2024-11-17 (sakashita44)
 
 ### Fixed in 2.1.2
