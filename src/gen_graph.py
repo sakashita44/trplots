@@ -99,7 +99,8 @@ def read_config():
     return config
 
 def gen_single_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict, config: dict):
-    ax = graph.concat_single_graph(data, ax)
+    hue_order = get_order(inst)
+    ax = graph.concat_single_graph(data, ax, hue_order=hue_order)
 
     if config["add_brackets"]:
         if inst["brackets"] != []:
@@ -107,15 +108,27 @@ def gen_single_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict, config: dict)
 
     return ax
 
-def gen_time_series_graph(data: pd.DataFrame, ax: plt.Axes):
-    ax = graph.time_series_graph(data, ax)
+def gen_time_series_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict):
+    order = get_order(inst)
+    ax = graph.time_series_graph(data, ax, order=order)
 
     return ax
 
-def gen_time_series_individual_graph(data: pd.DataFrame, ax: plt.Axes):
-    ax = graph.time_series_indiv_graph(data, ax)
+def gen_time_series_individual_graph(data: pd.DataFrame, ax: plt.Axes, inst: dict):
+    order = get_order(inst)
+    ax = graph.time_series_indiv_graph(data, ax, order=order)
 
     return ax
+
+def get_order(inst: dict):
+    # legendの指定がある場合はorderを指定
+    if inst["legend"] != {}:
+        order = list(inst["legend"].keys())
+    else:
+        order = None
+
+    return order
+
 
 def set_ax_wrap(ax, inst, config):
     xlabel = inst["xlabel"]
@@ -168,7 +181,7 @@ def save_set_graph(inst: dict, config: dict):
     if inst["is_time_series"]:
         # dataの1列目の名前をframeに変更
         data = data.rename(columns={data.columns[0]: "frame"})
-        ax = gen_time_series_graph(data, ax)
+        ax = gen_time_series_graph(data, ax, inst)
     else:
         ax = gen_single_graph(data, ax, inst, config)
 
@@ -187,7 +200,7 @@ def save_set_graph(inst: dict, config: dict):
     if config["save_individual"] and inst["is_time_series"]:
         fig, ax = plt.subplots()
         fig.set_size_inches(figure_width, figure_height)
-        ax = gen_time_series_individual_graph(data, ax)
+        ax = gen_time_series_individual_graph(data, ax, inst)
         ax = set_ax_wrap(ax, inst, config)
         save_graphs(fig, inst['output_name'] + "_individual", dpi)
         plt.close()
