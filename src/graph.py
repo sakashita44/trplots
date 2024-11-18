@@ -2,9 +2,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import seaborn as sns
 import pandas as pd
-import yaml
 
-def concat_single_graph(df: pd.DataFrame, ax, **kwargs):
+def concat_single_graph(df: pd.DataFrame, ax, hue_order=None, **kwargs):
     """seaborn.boxplotに処理を追加した関数
     heuに対応した箱ひげ図を作成
 
@@ -15,6 +14,7 @@ def concat_single_graph(df: pd.DataFrame, ax, **kwargs):
             * 3列目: is_assist_continue(実験のアシスト条件(TRUE/FALSE) またはPGT(null))
             * 4列目: group(グループ番号): heuに対応(必須ではない)
         ax: matplotlib.pyplot.Axes
+        hue_order: list
         plotのその他引数(x, y, axを除く)
     """
 
@@ -22,11 +22,21 @@ def concat_single_graph(df: pd.DataFrame, ax, **kwargs):
     # 4列目が存在しない場合は列を追加
     if len(df.columns) < 4:
         df['group'] = ''
-    # groupに1種類の値しかない場合はno_groupをTrueにする
     group_name = df.columns[3]
 
+    # dfのx_col_nameのタイプをstrに変換
+    df[x_col_name] = df[x_col_name].astype(str)
+
+    # hue_orderの中身をstrに変換
+    if hue_order is not None:
+        hue_order = [str(h) for h in hue_order]
+
+    # もしhue_orderがの中身とdfのx_col_nameの中身が一致しない場合はエラーを出力
+    if hue_order is not None and set(hue_order) != set(df[x_col_name].unique()):
+        raise ValueError("hue_order must be the same as the unique value of x_col_name (=condition)")
+
     # 箱ひげ図を作成
-    ax = sns.boxplot(x=group_name, y=y_col_name, hue=x_col_name, data=df, ax=ax, **kwargs)
+    ax = sns.boxplot(x=group_name, y=y_col_name, hue=x_col_name, data=df, ax=ax, hue_order=hue_order, **kwargs)
 
     boxwidth = get_boxwidth(ax)
 
@@ -245,7 +255,7 @@ def get_colname(df: pd.DataFrame, is_time_seriese):
 
     return x_col_name, y_col_name
 
-def time_series_graph(df: pd.DataFrame, ax, **kwargs):
+def time_series_graph(df: pd.DataFrame, ax, order=None, **kwargs):
     """
     seaborn.lineplotに処理を追加した関数
 
@@ -254,6 +264,7 @@ def time_series_graph(df: pd.DataFrame, ax, **kwargs):
             * 1列目: frame(フレーム番号): indexに設定していないもの
             * 2列目以降: cond1, cond2, ... (条件1, 条件2, ...)
         1. ax: matplotlib.pyplot.Axes
+        1. order: list
         1. plotのその他引数(x, y, axを除く)
     1. 返り値
         1. ax: matplotlib.pyplot.Axes
@@ -267,6 +278,14 @@ def time_series_graph(df: pd.DataFrame, ax, **kwargs):
     y_col_name = y_col_name.unique()
 
     mark = ['o', 'x', '^', 'v', '<', '>', 'd', 'p', 'h']
+
+    # もしorderが指定されているにも関わらず，y_col_nameとorder内容が一致しない場合はエラーを出力
+    if order is not None and set(y_col_name) != set(order):
+        raise ValueError("order must be the same as the unique value of y_col_name")
+
+    # orderが指定されている場合はその順番でグラフを作成
+    if order is not None:
+        y_col_name = order
 
     # condition毎に平均値と標準偏差のdfを作成
     for i, col in enumerate(y_col_name):
@@ -287,7 +306,7 @@ def time_series_graph(df: pd.DataFrame, ax, **kwargs):
 
     return ax
 
-def time_series_indiv_graph(df: pd.DataFrame, ax, **kwargs):
+def time_series_indiv_graph(df: pd.DataFrame, ax, order=None, **kwargs):
     """
     seaborn.lineplotに処理を追加した関数
 
@@ -296,6 +315,7 @@ def time_series_indiv_graph(df: pd.DataFrame, ax, **kwargs):
             * 1列目: frame(フレーム番号): indexに設定していないもの
             * 2列目以降: cond1, cond2, ... (条件1, 条件2, ...)
         1. ax: matplotlib.pyplot.Axes
+        1. order: list
         1. plotのその他引数(x, y, axを除く)
     1. 返り値
         1. ax: matplotlib.pyplot.Axes
@@ -311,9 +331,18 @@ def time_series_indiv_graph(df: pd.DataFrame, ax, **kwargs):
     mark = ['o', 'x', '^', 'v', '<', '>', 'd', 'p', 'h']
     color = sns.color_palette()
 
+    # もしorderが指定されているにも関わらず，y_col_nameとorder内容が一致しない場合はエラーを出力
+    if order is not None and set(y_col_name) != set(order):
+        raise ValueError("order must be the same as the unique value of y_col_name")
+
+    # orderが指定されている場合はその順番でグラフを作成
+    if order is None:
+        order = []
+
     # 時系列グラフを作成
     # 1列目をindexに設定
-    colname = []
+    # colnameをあらかじめorderに追加しておくことで，colnameの順番を固定する
+    colname = order
     df = df.set_index(x_col_name)
     # dfの列毎に時系列グラフを作成
     for i, col in enumerate(df.columns):
@@ -450,6 +479,27 @@ def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False, legen
             print("WARN: The legend labels are not changed.")
     else:
         new_labels = labels
+
+    # legendの順番を設定
+    if legend_correspondence_dict != {}:
+        legend_order = list(legend_correspondence_dict.values())
+    else:
+        legend_order = None
+
+    # legendをorderに従って並び替え
+    if legend_order is not None:
+        for o in reversed(legend_order):
+            # new_labelsのうちoの最初のインデックスを取得
+            idx = new_labels.index(o)
+            # new_labelsとhandlesのidx番目をtmpに保存
+            lb_tmp = new_labels[idx]
+            hd_tmp = handles[idx]
+            # new_labelsとhandlesのidx番目を削除
+            new_labels.pop(idx)
+            handles.pop(idx)
+            # new_labelsとhandlesの最初にtmpを追加
+            new_labels.insert(0, lb_tmp)
+            handles.insert(0, hd_tmp)
 
     # legendを設定
     # 時系列データの場合は同じ文字列が複数表示されるのを防ぐ処理を追加
