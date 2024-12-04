@@ -1,1 +1,1 @@
-output_name,filename,is_time_series,xlim_min,xlim_max,ylim_min,ylim_max,xlabel,ylabel,legend,brackets,bracket_base_y
+output_name,filename,dtype,graph_type,xlim_min,xlim_max,ylim_min,ylim_max,xlabel,ylabel,legend,brackets,bracket_base_y
