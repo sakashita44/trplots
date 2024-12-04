@@ -9,6 +9,22 @@ and versioning is based on [Semantic Versioning](http://semver.org/).
 * 単発データのviolin plot出力機能を追加
 * 箱ひげ図へのハッチング機能を追加
 * 箱ひげ図のgroup名を変更する機能を追加
+* 散布図(scatter plot)の出力機能を追加
+
+## [3.0.0] 2024-12-04 (sakashita44)
+
+### Added in 3.0.0
+
+* graph.pyの箱ひげ図作成関数にjitterを表示する機能を追加
+* graph.pyの箱ひげ図作成関数で平均値マーカ等の設定を追加
+
+### Fixed in 3.0.0
+
+### Changed in 3.0.0
+
+* 入力データファイル形式を変更(以前の形式は非対応に)
+    * instructions.csvのis_time_seriesを削除し，dtypeとgraph_typeを追加
+    * 対応データ形式としてワイド形式と転置形式を定義
 
 ## [2.2.0] 2024-11-17 (sakashita44)
 
