@@ -3,75 +3,242 @@ import matplotlib
 import seaborn as sns
 import pandas as pd
 
-def concat_single_graph(df: pd.DataFrame, ax, hue_order=None, **kwargs):
+
+def box_mean_plot(
+    data: pd.DataFrame,
+    x,
+    y,
+    hue=None,
+    flierprops={"marker": "x", "markersize": 10},
+    jitter_setting={},
+    mean_setting={},
+    **kwargs,
+):
     """seaborn.boxplotに処理を追加した関数
-    heuに対応した箱ひげ図を作成
+    箱ひげ図を作成し, 各箱ひげ図に平均値をプロットする
 
     Args:
-        df: pandas.DataFrame
-            * 1列目: trial_id(試行番号)
-            * 2列目: parameter※(パラメータ) ※ファイルにより異なる
-            * 3列目: is_assist_continue(実験のアシスト条件(TRUE/FALSE) またはPGT(null))
-            * 4列目: group(グループ番号): heuに対応(必須ではない)
-        ax: matplotlib.pyplot.Axes
-        hue_order: list
-        plotのその他引数(x, y, axを除く)
+        data: pandas.DataFrame
+            * x, y, hueで指定された列を持つデータフレーム(ワイド形式)
+                * hueは省略可能
+        x: str
+            x軸の列名 (dataの列名)
+            大分類
+        y: str
+            y軸の列名 (dataの列名)
+            データ
+        hue: str
+            hueの列名 (dataの列名) (省略可能)
+            大分類の中での分類
+        flierprops: dict
+            * seaborn.boxplotに渡す引数
+            * 外れ値のマーカーの設定
+        jitter_setting: dict
+            * seaborn.swarmplotに渡す引数
+            * 省略可能
+        mean_setting: dict
+
+        **kwargs:
+            seaborn.boxplotに渡す引数
+
+    Returns:
+        ax: matplotlib.pyplot.Axes (作成したグラフが入ったax)
     """
 
-    x_col_name, y_col_name = get_colname(df, False)
-    # 4列目が存在しない場合は列を追加
-    if len(df.columns) < 4:
-        df['group'] = ''
-    group_name = df.columns[3]
+    # dfのxとhueのタイプをstrに変換
+    data[x] = data[x].astype(str)
+    if hue is not None:
+        data[hue] = data[hue].astype(str)
 
-    # dfのx_col_nameのタイプをstrに変換
-    df[x_col_name] = df[x_col_name].astype(str)
-
-    # hue_orderの中身をstrに変換
-    if hue_order is not None:
-        hue_order = [str(h) for h in hue_order]
-
-    # もしhue_orderがの中身とdfのx_col_nameの中身が一致しない場合はエラーを出力
-    if hue_order is not None and set(hue_order) != set(df[x_col_name].unique()):
-        raise ValueError("hue_order must be the same as the unique value of x_col_name (=condition)")
+    # sns.boxplotに渡す引数を抽出
+    boxplot_args = {
+        key: kwargs[key] for key in kwargs if key in sns.boxplot.__code__.co_varnames
+    }
 
     # 箱ひげ図を作成
-    ax = sns.boxplot(x=group_name, y=y_col_name, hue=x_col_name, data=df, ax=ax, hue_order=hue_order, **kwargs)
+    ax = sns.boxplot(
+        x=x,
+        y=y,
+        hue=hue,
+        data=data,
+        flierprops=flierprops,
+        **boxplot_args,
+    )
 
+    # jitterを追加
+    if any(jitter_setting):
+        ax = add_jitter_plot(ax, data, x, y, hue, jitter_setting)
+
+    # 箱ひげ図に外れ値を除いた平均値をプロット
+    ax = add_mean_plot(ax, data, x, y, hue, mean_setting)
+
+    # 空の凡例を削除
+    if hue is None:
+        if ax.get_legend() is not None:
+            ax.get_legend().remove()
+
+    return ax
+
+
+def add_jitter_plot(ax, data, x, y, hue=None, jitter_setting={}):
+    """box_mean_plotで作成した箱ひげ図にjitterをプロットする関数
+
+    Args:
+        ax: matplotlib.pyplot.Axes
+            box_mean_plotで作成した箱ひげ図
+        data: pandas.DataFrame
+            * x, y, hueで指定された列を持つデータフレーム(ワイド形式)
+                * hueは省略可能
+        x: str
+            x軸の列名 (dataの列名)
+            大分類
+        y: str
+            y軸の列名 (dataの列名)
+            データ
+        hue: str
+            hueの列名 (dataの列名) (省略可能)
+            大分類の中での分類
+        jitter_setting: dict
+            * jitterをプロットする際の引数
+            * 省略可能
+
+    Returns:
+        ax: matplotlib.pyplot.Axes
+    """
+
+    # 現在のlegendを保存
+    handles, labels = ax.get_legend_handles_labels()
+
+    # swarmplotの引数を設定
+    swarmplot_args = {
+        key: jitter_setting[key]
+        for key in jitter_setting
+        if key in sns.swarmplot.__code__.co_varnames
+    }
+    if "marker" not in jitter_setting:
+        swarmplot_args["marker"] = "o"
+    else:
+        swarmplot_args["marker"] = jitter_setting["marker"]
+    if "alpha" not in jitter_setting:
+        swarmplot_args["alpha"] = 0.7
+    else:
+        swarmplot_args["alpha"] = jitter_setting["alpha"]
+
+    ax = sns.swarmplot(
+        x=x,
+        y=y,
+        hue=hue,
+        data=data,
+        dodge=True,
+        **swarmplot_args,
+    )
+    # swarmplotで追加したlegendのみを削除
+    if hue is not None:
+        ax.get_legend().remove()
+    ax.legend(handles, labels)
+
+    return ax
+
+
+def add_mean_plot(ax, data, x, y, hue=None, mean_setting={}):
+    """box_mean_plotで作成した箱ひげ図に, 外れ値を除いた平均値をプロットする関数
+
+    Args:
+        ax: matplotlib.pyplot.Axes
+            box_mean_plotで作成した箱ひげ図
+        data: pandas.DataFrame
+            * x, y, hueで指定された列を持つデータフレーム(ワイド形式)
+                * hueは省略可能
+        x: str
+            x軸の列名 (dataの列名)
+            大分類
+        y: str
+            y軸の列名 (dataの列名)
+            データ
+        hue: str
+            hueの列名 (dataの列名) (省略可能)
+            大分類の中での分類
+        mean_setting: dict
+            * 平均値をプロットする際の引数
+            * 省略可能
+
+    Returns:
+        ax: matplotlib.pyplot.Axes
+    """
+
+    # plotの引数を設定
+    mean_plot_args = {
+        key: mean_setting[key]
+        for key in mean_setting
+        if key in ax.plot.__code__.co_varnames
+    }
+    if "color" not in mean_setting:
+        mean_plot_args["color"] = "black"
+    else:
+        mean_plot_args["color"] = mean_setting["color"]
+    if "marker" not in mean_setting:
+        mean_plot_args["marker"] = "+"
+    else:
+        mean_plot_args["marker"] = mean_setting["marker"]
+    if "markersize" not in mean_setting:
+        mean_plot_args["markersize"] = 10
+    else:
+        mean_plot_args["markersize"] = mean_setting["markersize"]
+    if "markeredgewidth" not in mean_setting:
+        mean_plot_args["markeredgewidth"] = 1
+    else:
+        mean_plot_args["markeredgewidth"] = mean_setting["markeredgewidth"]
+
+    # 箱ひげ図の幅を取得
     boxwidth = get_boxwidth(ax)
 
     # legendのラベルを取得
-    handles, leg_labels = ax.get_legend_handles_labels()
+    if hue is None:
+        leg_labels = [None]
+    else:
+        labels = ax.get_legend().get_texts()
+        leg_labels = [lb.get_text() for lb in labels]
 
     # xticksのラベルを取得
     xticks_labels = ax.get_xticklabels()
     xticks_labels = [x.get_text() for x in xticks_labels]
 
-    # df[x_col_name]とdf[group_name]のタイプをstrに変換
-    df[x_col_name] = df[x_col_name].astype(str)
-    df[group_name] = df[group_name].astype(str)
-
     # 箱ひげ図に外れ値を除いた平均値をプロット
     for i, xt_label in enumerate(xticks_labels):
         for j, leg_label in enumerate(leg_labels):
             # データの四分位範囲を取得
-            q1 = df[(df[group_name] == xt_label) & (df[x_col_name] == leg_label)][y_col_name].quantile(0.25)
-            q3 = df[(df[group_name] == xt_label) & (df[x_col_name] == leg_label)][y_col_name].quantile(0.75)
+            condition = data[x] == xt_label
+            if hue is not None:
+                condition = condition & (data[hue] == leg_label)
+            q1 = data[condition][y].quantile(0.25)
+            q3 = data[condition][y].quantile(0.75)
             iqr = q3 - q1
             lower_bound = q1 - 1.5 * iqr
             upper_bound = q3 + 1.5 * iqr
 
-            df_tmp = df[(df[group_name] == xt_label) & (df[x_col_name] == leg_label) &
-                        (df[y_col_name] >= lower_bound) & (df[y_col_name] <= upper_bound)]
+            # 四分位範囲内のデータのみを抽出
+            on_bound_condition = (
+                (data[x] == xt_label)
+                & (data[y] >= lower_bound)
+                & (data[y] <= upper_bound)
+            )
+            if hue is not None:
+                on_bound_condition = on_bound_condition & (data[hue] == leg_label)
+            df_tmp = data[on_bound_condition]
             x_cood = get_boxcenter_x(boxwidth, i, j, len(leg_labels))
 
             # 平均値のプロット
-            ax.plot(x_cood, [df_tmp[y_col_name].mean()], marker='x', markersize=8, color='black')
+            ax.plot(
+                x_cood,
+                [df_tmp[y].mean()],
+                **mean_plot_args,
+            )
 
     return ax
 
+
 def get_boxwidth(ax):
-    # 各箱ひげ図のx座標の位置を取得 (ax.patches を使う)
+    # 各箱ひげ図のx座標の位置を取得 (ax.patches を使用)
     xlists = []
     for i, patch in enumerate(ax.patches):
         # パスの頂点（vertices）を取得してx座標を計算
@@ -93,6 +260,7 @@ def get_boxwidth(ax):
     xwidth = sum(xlists) / len(xlists)
     return xwidth
 
+
 def get_boxcenter_x(boxwidth, xtick_id, hue_id, hue_len):
     """箱ひげ図の中心のx座標を取得する関数
 
@@ -112,45 +280,63 @@ def get_boxcenter_x(boxwidth, xtick_id, hue_id, hue_len):
     # 偶数の場合
     if hue_len % 2 == 0:
         # hue_idが半分より前の場合 (例えばhue_len=4の場合，0, 1)
-        if hue_id < hue_len//2:
+        if hue_id < hue_len // 2:
             k = -1
             # 例えばhue_len=4の場合，nは-2か-1になる
-            n = abs(hue_id - hue_len//2)
+            n = abs(hue_id - hue_len // 2)
         # hue_idが半分より後の場合 (例えばhue_len=4の場合，2, 3)
         else:
             k = 1
             # 例えばhue_len=4の場合，nは1か2になる
-            n = hue_id - hue_len//2 + 1
+            n = hue_id - hue_len // 2 + 1
         # 中心から1つずれるときはboxwidth/2を加算，2つずれるときは3*boxwidth/2を加算，3つずれるときは5*boxwidth/2を加算...となるのでnがずれの数として
-        x_cood = x_center + ((boxwidth * (n-1)) + (boxwidth/2)) * k
+        x_cood = x_center + ((boxwidth * (n - 1)) + (boxwidth / 2)) * k
 
     # 奇数の場合
     else:
         # hue_idが真ん中の場合 (例えばhue_len=5の場合，2)
-        if hue_id == hue_len//2:
+        if hue_id == hue_len // 2:
             n = 0
             k = 0
         # hue_idが半分より前の場合 (例えばhue_len=5の場合，0, 1)
-        elif hue_id < hue_len//2:
+        elif hue_id < hue_len // 2:
             k = -1
-            n = abs(hue_id - hue_len//2)
+            n = abs(hue_id - hue_len // 2)
         # hue_idが半分より後の場合 (例えばhue_len=5の場合，3, 4)
         else:
             k = 1
-            n = hue_id - hue_len//2
+            n = hue_id - hue_len // 2
         x_cood = x_center + (boxwidth * n) * k
 
     return x_cood
 
-def add_brackets_for_concat_single(ax, brackets, bracket_base_y = None, dh=1, fs=10):
-    """concat_single_graphの追加された状態のaxに[([int, int], [int, int], str), ([int, int], [int, int], str), ...]で指定される有意差を表示する
+
+def add_brackets_for_boxplot(ax, brackets, bracket_base_y=None, dh=1, fs=10):
+    """
+    箱ひげ図が追加された状態のaxに[([int, int], [int, int], str), ([int, int], [int, int], str), ...]で指定される有意差を表示する
+    箱ひげ図の存在しないaxが与えられた場合の動作は保証しない
 
     Args:
         ax: matplotlib.pyplot.Axes
+            * box_mean_plotで作成した箱ひげ図
         brackets: list of tuple([int, int], [int, int], str)
-            * ([int, int], [int, int], str): ([group1, member1], [group2, member2], p-value-mark)
-                * group: 有意差を表示する箱ひげ図グループの位置(左から1始まり)
-                * member: 有意差を表示する箱ひげ図の位置(左から1始まり)
+            * listの要素の数だけブラケットを表示
+            * 1つのブラケットはtuple([int, int], [int, int], str)で指定
+                * タプルの要素1: 1つめの箱ひげ図の位置を指定するためのインデックス([int, int])
+                    * 1つ目のint: x軸のインデックス(int)
+                    * 2つ目のint: hueのインデックス(int)
+                * タプルの要素2: 2つめの箱ひげ図の位置を指定するためのインデックス([int, int])
+                    * 1つ目のint: x軸のインデックス(int)
+                    * 2つ目のint: hueのインデックス(int)
+                * タプルの要素3: p値を示す文字列(str)
+            * すべてのインデックスは1始まり
+            * hueが存在しない場合はhueのインデックスは1を指定
+        bracket_base_y: float
+            有意差を表示するy軸の基準位置
+        dh: float
+            有意差を表示するy軸の間隔
+        fs: int
+            有意差を表示するフォントサイズ
 
     Returns:
         ax: matplotlib.pyplot.Axes
@@ -165,21 +351,43 @@ def add_brackets_for_concat_single(ax, brackets, bracket_base_y = None, dh=1, fs
     xtick_len = len(xtick_labels)
 
     # ax内のlegendのラベルを取得
-    legends = ax.get_legend().get_texts()
-    legend_labels = [l.get_text() for l in legends]
-    legend_len = len(legend_labels)
+    if ax.get_legend() is not None:
+        legends = ax.get_legend().get_texts()
+        legend_labels = [lb.get_text() for lb in legends]
+        legend_len = len(legend_labels)
+    else:
+        legend_labels = [None]
+        legend_len = 1
 
     # bracketsの要素の型をチェック
     for b in brackets:
         if len(b) != 3:
-            raise ValueError("brackets must be a list of tuple([int, int], [int, int] str)")
+            raise ValueError(
+                "brackets must be a list of tuple([int, int], [int, int] str)"
+            )
         if len(b[0]) != 2 or len(b[1]) != 2:
-            raise ValueError("brackets must be a list of tuple([int, int], [int, int] str)")
-        if type(b[0][0]) != int or type(b[0][1]) != int or type(b[1][0]) != int or type(b[1][1]) != int:
-            raise ValueError("brackets must be a list of tuple([int, int], [int, int] str)")
-        if type(b[2]) != str:
-            raise ValueError("brackets must be a list of tuple([int, int], [int, int] str)")
-        if b[0][0] > xtick_len or b[0][1] > legend_len or b[1][0] > xtick_len or b[1][1] > legend_len:
+            raise ValueError(
+                "brackets must be a list of tuple([int, int], [int, int] str)"
+            )
+        if (
+            not isinstance(b[0][0], int)
+            or not isinstance(b[0][1], int)
+            or not isinstance(b[1][0], int)
+            or not isinstance(b[1][1], int)
+        ):
+            raise ValueError(
+                "brackets must be a list of tuple([int, int], [int, int] str)"
+            )
+        if not isinstance(b[2], str):
+            raise ValueError(
+                "brackets must be a list of tuple([int, int], [int, int] str)"
+            )
+        if (
+            b[0][0] > xtick_len
+            or b[0][1] > legend_len
+            or b[1][0] > xtick_len
+            or b[1][1] > legend_len
+        ):
             raise ValueError("the index of brackets is out of range")
 
     # y軸の範囲を取得
@@ -192,20 +400,32 @@ def add_brackets_for_concat_single(ax, brackets, bracket_base_y = None, dh=1, fs
     # 有意差を表示
     for b in brackets:
         # 1つめの箱ひげ図の位置を取得
-        x1 = get_boxcenter_x(get_boxwidth(ax), b[0][0]-1, b[0][1]-1, len(legend_labels))
+        x1 = get_boxcenter_x(
+            get_boxwidth(ax), b[0][0] - 1, b[0][1] - 1, len(legend_labels)
+        )
         # 2つめの箱ひげ図の位置を取得
-        x2 = get_boxcenter_x(get_boxwidth(ax), b[1][0]-1, b[1][1]-1, len(legend_labels))
+        x2 = get_boxcenter_x(
+            get_boxwidth(ax), b[1][0] - 1, b[1][1] - 1, len(legend_labels)
+        )
 
         # y軸の位置を取得
         y = ylim[1] - 1
 
         # group1, group2間にブラケットを表示
-        ax.plot([x1, x1, x2, x2], [y, y+1, y+1, y], lw=1, c='black')
+        ax.plot([x1, x1, x2, x2], [y, y + 1, y + 1, y], lw=1, c="black")
 
         # p-value-markを表示
         # fsにあわせて調整
-        fh = fs /10
-        ax.text((x1 + x2) / 2, y+1+fh, b[2], ha='center', va='center', color='black', fontsize=fs)
+        fh = fs / 10
+        ax.text(
+            (x1 + x2) / 2,
+            y + 1 + fh,
+            b[2],
+            ha="center",
+            va="center",
+            color="black",
+            fontsize=fs,
+        )
 
         # y軸の範囲を調整
         ylim[1] += dh
@@ -214,186 +434,224 @@ def add_brackets_for_concat_single(ax, brackets, bracket_base_y = None, dh=1, fs
 
     return ax
 
-def single_describe(df: pd.DataFrame):
-    """single_graphで使用したのと同じデータを与えるとその概要を返す関数
+
+def single_describe(data: pd.DataFrame, x, y, hue=None):
+    """box_mean_plotで使用したのと同じデータを与えるとその概要を返す関数
 
     Args:
-        df: pandas.DataFrame
-            * 1列目: trial_id(試行番号)
-            * 2列目: parameter※(パラメータ) ※ファイルにより異なる
-            * 3列目: is_assist_continue(実験のアシスト条件(TRUE/FALSE) またはPGT(null))
+        data: pandas.DataFrame
+            * x, y, hueで指定された列を持つデータフレーム(ワイド形式)
+                * hueは省略可能
+        x: str
+            x軸の列名 (dataの列名)
+            大分類
+        y: str
+            y軸の列名 (dataの列名)
+            データ
+        hue: str
+            hueの列名 (dataの列名) (省略可能)
+            大分類の中での分類
 
     Returns:
         describe: pandas.DataFrame
     """
-    x_col_name, y_col_name = get_colname(df, False)
 
     # データの概要を返す
-    describe = df.groupby(x_col_name)[y_col_name].describe()
+    if hue is None:
+        describe = data.groupby(x)[y].describe()
+    else:
+        describe = data.groupby([x, hue])[y].describe()
 
     return describe
 
-def get_colname(df: pd.DataFrame, is_time_seriese):
-    """dfの列名を取得する関数
 
-    Args:
-        df: pandas.DataFrame
-        is_time_seriese: bool
-            True: 時系列データの場合
-            False: 時系列データでない場合
-
-    Returns:
-        x_col_name: str
-        y_col_name: str
-    """
-    if is_time_seriese:
-        x_col_name = df.columns[0]
-        y_col_name = df.columns[1:]
-    else:
-        x_col_name = df.columns[2]
-        y_col_name = df.columns[1]
-
-    return x_col_name, y_col_name
-
-def time_series_graph(df: pd.DataFrame, ax, order=None, **kwargs):
+def line_mean_sd_plot(data: pd.DataFrame, order=None, marks=[], **kwargs):
     """
     seaborn.lineplotに処理を追加した関数
+    列名毎に平均と標準偏差を線グラフにプロットする
 
-    1. 引数
-        1. pandas.DataFrame
-            * 1列目: frame(フレーム番号): indexに設定していないもの
-            * 2列目以降: cond1, cond2, ... (条件1, 条件2, ...)
-        1. ax: matplotlib.pyplot.Axes
-        1. order: list
-        1. plotのその他引数(x, y, axを除く)
-    1. 返り値
-        1. ax: matplotlib.pyplot.Axes
-        1. describe: pandas.DataFrame
-    1. 処理
-        1. 列名毎に時系列グラフをax内に作成
-        1. 同一列名のデータは平均値と標準偏差(網掛け)をプロット
+    Args:
+        data: pandas.DataFrame
+            * index: x軸の値
+            * 各列: データ
+                * 列名が同じ列をまとめて平均と標準偏差をプロットする
+        order: list
+            * 凡例の順番を指定
+            * 省略可能
+        marks: list
+            * 凡例のマーカーを指定(系列数より多い必要がある)
+            * 省略した場合はマーカーなし
+        **kwargs:
+            seaborn.lineplotに渡す引数
     """
     # 時系列グラフの元データを作成
-    x_col_name, y_col_name = get_colname(df, True)
-    y_col_name = y_col_name.unique()
+    unique_cols = data.columns.unique()
 
-    mark = ['o', 'x', '^', 'v', '<', '>', 'd', 'p', 'h']
+    # markが指定されていない場合Noneを代入
+    if len(marks) == 0:
+        marks = [None] * len(unique_cols)
 
     # もしorderが指定されているにも関わらず，y_col_nameとorder内容が一致しない場合はエラーを出力
-    if order is not None and set(y_col_name) != set(order):
-        raise ValueError("order must be the same as the unique value of y_col_name")
+    if order is not None and set(unique_cols) != set(order):
+        raise ValueError(
+            "order must be the same as the unique value of data column name"
+        )
 
     # orderが指定されている場合はその順番でグラフを作成
     if order is not None:
-        y_col_name = order
+        unique_cols = order
 
-    # condition毎に平均値と標準偏差のdfを作成
-    for i, col in enumerate(y_col_name):
-        # colを含む列のみを抽出
-        df_tmp = df[col]
-        # frame列を除いたcol列の平均値と標準偏差を新しいdfとして作成
-        df_mean_sd = pd.DataFrame({'frame': df[x_col_name]})
-        # df_tmpの平均値と標準偏差を計算
-        df_mean_sd[col + '_mean'] = df_tmp.mean(axis=1)
-        df_mean_sd[col + '_std'] = df_tmp.std(axis=1)
+    # 同じ名前の列毎に平均値と標準偏差のdfを作成
+    for i, col in enumerate(unique_cols):
+        # col列のみを抽出
+        data_tmp = data[col]
+        # col列の平均値と標準偏差を新しいdfとして作成
+        data_mean_sd = pd.DataFrame(index=data.index)
 
-        # 時系列グラフを作成
-        ax = sns.lineplot(x=x_col_name, y=col + '_mean', data=df_mean_sd, ax=ax, label=col, **kwargs)
-        # マーカも表示する場合
-        #sns.lineplot(x=x_col_name, y=col+'_mean', data=df_mean_sd, ax=ax, label=col, marker=mark[i], markerfacecolor='none', markeredgecolor=sns.color_palette()[i])
+        # data_tmpの平均値と標準偏差を計算
+        if data_tmp.ndim == 1:
+            data_mean_sd[col + "_mean"] = data_tmp[0]
+            data_mean_sd[col + "_std"] = 0
+        else:
+            data_mean_sd[col + "_mean"] = data_tmp.mean(axis=1)
+            data_mean_sd[col + "_std"] = data_tmp.std(axis=1)
+
+        # グラフを作成
+        ax = sns.lineplot(
+            x=data_mean_sd.index,
+            y=col + "_mean",
+            data=data_mean_sd,
+            label=col,
+            marker=marks[i],
+            markerfacecolor="none",
+            markeredgecolor=sns.color_palette()[i],
+            **kwargs,
+        )
         # 平均値に標準偏差を網掛け
-        ax.fill_between(df_mean_sd[x_col_name], df_mean_sd[col + '_mean'] - df_mean_sd[col + '_std'], df_mean_sd[col + '_mean'] + df_mean_sd[col +'_std'], alpha=0.2)
+        ax.fill_between(
+            data_mean_sd.index,
+            data_mean_sd[col + "_mean"] - data_mean_sd[col + "_std"],
+            data_mean_sd[col + "_mean"] + data_mean_sd[col + "_std"],
+            alpha=0.2,
+        )
 
     return ax
 
-def time_series_indiv_graph(df: pd.DataFrame, ax, order=None, **kwargs):
+
+def line_group_coloring_plot(
+    data: pd.DataFrame, order=[], marks=[], color_palette=sns.color_palette(), **kwargs
+):
     """
     seaborn.lineplotに処理を追加した関数
+    列名毎に色分けして個別に線グラフをプロットする
 
-    1. 引数
-        1. pandas.DataFrame
-            * 1列目: frame(フレーム番号): indexに設定していないもの
-            * 2列目以降: cond1, cond2, ... (条件1, 条件2, ...)
-        1. ax: matplotlib.pyplot.Axes
-        1. order: list
-        1. plotのその他引数(x, y, axを除く)
-    1. 返り値
-        1. ax: matplotlib.pyplot.Axes
-        1. describe: pandas.DataFrame
-    1. 処理
-        1. 列名毎に時系列グラフをax内に作成
-        1. 同一列名のデータは平均値と標準偏差(網掛け)をプロット
+    Args:
+
     """
     # 時系列グラフの元データを作成
-    x_col_name, y_col_name = get_colname(df, True)
-    y_col_name = y_col_name.unique()
+    unique_cols = data.columns.unique()
 
-    mark = ['o', 'x', '^', 'v', '<', '>', 'd', 'p', 'h']
-    color = sns.color_palette()
+    # markが指定されていない場合Noneを代入
+    if len(marks) == 0:
+        marks = [None] * len(unique_cols)
 
-    # もしorderが指定されているにも関わらず，y_col_nameとorder内容が一致しない場合はエラーを出力
-    if order is not None and set(y_col_name) != set(order):
-        raise ValueError("order must be the same as the unique value of y_col_name")
+    # もしorderが指定されているにも関わらず，unique_colsとorder内容が一致しない場合はエラーを出力
+    if order is not None and set(unique_cols) != set(order):
+        raise ValueError(
+            "order must be the same as the unique value of data column name"
+        )
 
-    # orderが指定されている場合はその順番でグラフを作成
-    if order is None:
-        order = []
-
-    # 時系列グラフを作成
-    # 1列目をindexに設定
+    # グラフを作成
     # colnameをあらかじめorderに追加しておくことで，colnameの順番を固定する
     colname = order
-    df = df.set_index(x_col_name)
-    # dfの列毎に時系列グラフを作成
-    for i, col in enumerate(df.columns):
+
+    # dataの列毎に時系列グラフを作成
+    for i, col in enumerate(data.columns):
         # s.name毎に色を変えてlineplotを作成
-        s = df.iloc[:, i]
-        if not s.name in colname:
-            colname.append(s.name)
+        series = data.iloc[:, i]
+        if series.name not in colname:
+            colname.append(series.name)
         # 名前毎に色を変えてlineplotを作成
-        ax = sns.lineplot(x=s.index, y=s.values, ax=ax, label=s.name, color=color[colname.index(s.name)], **kwargs)
+        ax = sns.lineplot(
+            x=series.index,
+            y=series.values,
+            label=series.name,
+            color=color_palette[colname.index(series.name)],
+            **kwargs,
+        )
+
+    # 凡例に同じ文字列が複数表示されるのを防ぐ
+    handles, labels = ax.get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    ax.legend(by_label.values(), by_label.keys())
 
     return ax
 
-def time_series_describe(df: pd.DataFrame):
-    """time_series_graphで使用したのと同じデータを与えるとその概要を返す関数
+
+def series_describe(data: pd.DataFrame):
+    """line_**_plotで使用したのと同じデータを与えるとその概要を返す関数
 
     Args:
         df: pandas.DataFrame
-            * 1列目: frame(フレーム番号): indexに設定していないもの
-            * 2列目以降: cond1, cond2, ... (条件1, 条件2, ...)
+            * index: x軸の値
+            * 各列: データ
     Returns:
         describe: pandas.DataFrame
     """
 
-    x_col_name, y_col_name = get_colname(df, True)
-    y_col_name = y_col_name.unique()
+    unique_cols = data.columns.unique()
 
-    df_ms = []
+    data_ms = []
     cond_cnt = {}
-    for i, col in enumerate(y_col_name):
+    for i, col in enumerate(unique_cols):
         # colを含む列のみを抽出
-        df_tmp = df[col]
-        # frame列を除いたcol列の平均値と標準偏差を新しいdfとして作成
-        df_mean_sd = pd.DataFrame({'frame': df[x_col_name]})
+        data_tmp = data[col]
+        # col列の平均値と標準偏差を新しいdfとして作成
+        data_mean_sd = pd.DataFrame(index=data.index)
         # df_tmpの平均値と標準偏差を計算
-        df_mean_sd[col + '_mean'] = df_tmp.mean(axis=1)
-        df_mean_sd[col + '_std'] = df_tmp.std(axis=1)
+        if data_tmp.ndim == 1:
+            data_mean_sd[col + "_mean"] = data_tmp
+            data_mean_sd[col + "_std"] = 0
+        else:
+            data_mean_sd[col + "_mean"] = data_tmp.mean(axis=1)
+            data_mean_sd[col + "_std"] = data_tmp.std(axis=1)
 
-        df_ms.append(df_mean_sd.drop(columns='frame'))
-        cond_cnt[col] = df_tmp.shape[1]
+        data_ms.append(data_mean_sd)
+        if len(data_tmp.shape) == 1:
+            cond_cnt[col] = 1
+        else:
+            cond_cnt[col] = data_tmp.shape[1]
 
     # データの概要を返す
-    describe = pd.concat(df_ms, axis=1)
-    describe = pd.concat([df[x_col_name], describe], axis=1)
+    describe = pd.concat(data_ms, axis=1)
     describe = describe.describe()
     for cond, cnt in cond_cnt.items():
         # describeに新しくcond列を追加し，count行にcntを追加
-        describe.loc['count', cond+"_trial"] = cnt
+        describe.loc["count", cond + "_trial"] = cnt
 
     return describe
 
-def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False, legend_correspondence_dict={}, label_font_size=None, tick_font_size=None, legend_font_size=None, graph_limit_left=None, graph_limit_right=None, graph_limit_bottom=None, graph_limit_top=None, xlabel_loc_x=None, xlabel_loc_y=None, ylabel_loc_x=None, ylabel_loc_y=None):
+
+def set_ax(
+    ax,
+    xlabel,
+    ylabel,
+    xlim=None,
+    ylim=None,
+    graph_type="box",
+    legend_correspondence_dict={},
+    label_font_size=None,
+    tick_font_size=None,
+    legend_font_size=None,
+    graph_limit_left=None,
+    graph_limit_right=None,
+    graph_limit_bottom=None,
+    graph_limit_top=None,
+    xlabel_loc_x=None,
+    xlabel_loc_y=None,
+    ylabel_loc_x=None,
+    ylabel_loc_y=None,
+):
     """axに対してconfig.ymlで指定したデフォルトのフォントサイズを設定する
     同時にx軸，y軸のラベル名を設定し，グラフの大きさを設定する
 
@@ -407,9 +665,9 @@ def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False, legen
             x軸の範囲
         ylim: double
             y軸の範囲
-        is_time_series: bool
-            True: 時系列データの場合
-            False: 時系列データでない場合
+        graph_type: str
+            グラフの種類
+            "box": 箱ひげ図, "line": 折れ線グラフ
         legend_correspondence_dict: dict
             凡例のラベルを変更するための辞書
         label_font_size: int
@@ -446,8 +704,18 @@ def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False, legen
         ax.tick_params(labelsize=tick_font_size)
 
     # グラフの大きさを設定(画像サイズを1とした場合の比率)
-    if graph_limit_left is not None and graph_limit_right is not None and graph_limit_bottom is not None and graph_limit_top is not None:
-        plt.gcf().subplots_adjust(left=graph_limit_left, right=graph_limit_right, bottom=graph_limit_bottom, top=graph_limit_top)
+    if (
+        graph_limit_left is not None
+        and graph_limit_right is not None
+        and graph_limit_bottom is not None
+        and graph_limit_top is not None
+    ):
+        plt.gcf().subplots_adjust(
+            left=graph_limit_left,
+            right=graph_limit_right,
+            bottom=graph_limit_bottom,
+            top=graph_limit_top,
+        )
 
     # ラベル位置の調整
     if xlabel_loc_x is not None and xlabel_loc_y is not None:
@@ -456,7 +724,7 @@ def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False, legen
         ax.yaxis.set_label_coords(ylabel_loc_x, ylabel_loc_y)
 
     # グリッドを点線で表示
-    ax.grid(linestyle=':')
+    ax.grid(linestyle=":")
 
     # x軸、y軸の範囲を設定
     if xlim is not None:
@@ -475,7 +743,9 @@ def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False, legen
             new_labels = labels
         elif len(new_labels) != len(labels):
             new_labels = labels
-            print("WARN: The number of legend correspondence input is not equal to the number of legend labels.")
+            print(
+                "WARN: The number of legend correspondence input is not equal to the number of legend labels."
+            )
             print("WARN: The legend labels are not changed.")
     else:
         new_labels = labels
@@ -503,28 +773,110 @@ def set_ax(ax, xlabel, ylabel, xlim=None, ylim=None, is_time_series=False, legen
 
     # legendを設定
     # 時系列データの場合は同じ文字列が複数表示されるのを防ぐ処理を追加
-    if is_time_series:
-        ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    if graph_type == "line":
         # 凡例に同じ文字列が複数表示されるのを防ぐ
         handles, labels = ax.get_legend_handles_labels()
         by_label = dict(zip(new_labels, handles))
         ax.legend(by_label.values(), by_label.keys(), fontsize=legend_font_size)
-    else:
+    elif graph_type == "box":
         ax.legend(handles, new_labels, fontsize=legend_font_size)
 
     return ax
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # TEST
     # 試行ごとのパラメータの箱ひげ図
     # データの作成(実際はcsvファイル等から読み込む)
-    df = pd.DataFrame({
-        'trial_id': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
-        'parameter': [1, 2, 3, 10, 5, 6, 7, 8, 9, 10, 10, 11, 9, 14, 16, 17, 17, 15, -1],
-        'is_assist_continue': [True, True, True, True, True, False, False, False, False, False, "PGT", "PGT", "PGT", "PGT", "PGT", "PGT", "PGT", "PGT", "PGT"],
-        #'is_assist_continue': [False, True, True, True, True, False, False, False, False, False, False, False, True, True, False, False, False, False, False],
-        'group': ["A", "A", "A", "B", "B", "A", "A", "A", "B", "B", "A", "A", "A", "A", "B", "B", "B", "B", "B"]
-    })
+    df = pd.DataFrame(
+        {
+            "trial_id": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+            ],
+            "parameter": [
+                1,
+                2,
+                3,
+                10,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                10,
+                11,
+                9,
+                14,
+                16,
+                17,
+                17,
+                15,
+                -1,
+            ],
+            "is_assist_continue": [
+                True,
+                True,
+                True,
+                True,
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+                "PGT",
+                "PGT",
+                "PGT",
+                "PGT",
+                "PGT",
+                "PGT",
+                "PGT",
+                "PGT",
+                "PGT",
+            ],
+            #'is_assist_continue': [False, True, True, True, True, False, False, False, False, False, False, False, True, True, False, False, False, False, False],
+            "group": [
+                "A",
+                "A",
+                "A",
+                "B",
+                "B",
+                "A",
+                "A",
+                "A",
+                "B",
+                "B",
+                "A",
+                "A",
+                "A",
+                "A",
+                "B",
+                "B",
+                "B",
+                "B",
+                "B",
+            ],
+        }
+    )
 
     # # グラフの作成(single_graph)
     # # fig, ax = plt.subplots()でfig, axを作成
@@ -556,19 +908,25 @@ if __name__ == '__main__':
     ## 使用したデータの概要を確認する
     describe = single_describe(df)
     ## axの見た目等を設定する
-    ax = set_ax(ax, 'condition', 'value', ylim=[-5, 20])
+    ax = set_ax(ax, "condition", "value", ylim=[-5, 20])
 
     # 以降，必要に応じて処理を追加
     # legendの値を"True", "False", ""から"continue", "stop", "PGT"に変更
     # 凡例の要素を取得
     handles, labels = ax.get_legend_handles_labels()
-    labels = ['continue', 'stop', 'PGT']
+    labels = ["continue", "stop", "PGT"]
 
     # 凡例を設定
     ax.legend(handles, labels)
 
     # 有意差を表示
-    ax = add_brackets_for_concat_single(ax, [([1, 1], [1, 2], 'p<0.05'), ([1, 2], [2, 3], 'p<0.01')], bracket_base_y=20, dh=2, fs=10)
+    ax = add_brackets_for_concat_single(
+        ax,
+        [([1, 1], [1, 2], "p<0.05"), ([1, 2], [2, 3], "p<0.01")],
+        bracket_base_y=20,
+        dh=2,
+        fs=10,
+    )
 
     # グラフ等を表示
     print(describe)

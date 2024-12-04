@@ -20,7 +20,7 @@
 * Python 3.12.2
     * WindowsでPythonランチャーを使用していることを前提としている
         * それ以外の場合pyコマンドを適宜pythonコマンド等に置き換えること
-    * ライブラリはrequirements.txtを参照
+    * ライブラリはetc/requirements.txtを参照
 * PowerShell 7.4.6
 
 ## How to use
@@ -90,25 +90,32 @@ DataVisualize/
 ### 指示ファイル
 
 Input/にinstructions.csvを配置し，以下の通り記述する．
-なお2列目以降は例であるため，実際のデータに合わせて変更すること．
+なお2列目以降は例であるため，実際のデータに合わせて変更する．
+先頭のスペースは無視される．
 **指示ファイルの形式が間違っている場合のエラー処理等は実装していないので注意**
 
 ```csv
 
-output_name, filename, is_time_series, xlim_min, xlim_max, ylim_min, ylim_max, xlabel, ylabel, legend, brackets, bracket_base_y
-output1, data1.csv, TRUE, 0, 100, -10, 200, frame, parameter1,condition1:con1.condition2:con2.condition3:con3, [1:1][1:2]*.[1:1][2:1]**, 70
-output2, data2.csv, FALSE,,,20, 50, condition, parameter2,True:continue.False:stop.:PGT,,
+output_name, filename, dtype, graph_type, xlim_min, xlim_max, ylim_min, ylim_max, xlabel, ylabel, legend, brackets, bracket_base_y
+output1, data1.csv, wide, box, , , 20, 50, condition, parameter1, condition1:con1.condition2:con2.condition3:con3, [1:1][1:2]*.[1:1][2:1]**, 70
+output2, data2.csv, long, line, 0, 100, -10, 200, frame, parameter2, True:continue.False:stop.:PGT, ,
 
 ```
+
+| output_name | filename  | dtype | graph_type | xlim_min | xlim_max | ylim_min | ylim_max | xlabel    | ylabel     | legend                                          | brackets                 | bracket_base_y |
+| ----------- | --------- | ----- | ---------- | -------- | -------- | -------- | -------- | --------- | ---------- | ----------------------------------------------- | ------------------------ |
+| output1     | data1.csv | wide  | box        |          |          | 20       | 50       | condition | parameter1 | condition1:con1.condition2:con2.condition3:con3 | [1:1][1:2]*.[1:1][2:1]** | 70             |
+| output2     | data2.csv | tp    | line       | 0        | 100      | -10      | 200      | frame     | parameter2 | True:continue.False:stop.:PGT                   |                          |                |
 
 このとき各列の指定方法は以下の通り
 
 1. output_name: 出力ファイル名(**必須**，拡張子なし，png形式等で出力，ディレクトリ指定可能)
 1. filename: データファイル名(**必須**，拡張子あり，csv形式，visualize/Input/をルートとした相対パスで指定)
-1. is_time_series: 時系列データかどうか(TRUE/FALSE，"TRUE"以外の文字列が入力された場合はFALSEとして扱われる)
-1. xlim_min: x軸の最小値
+1. dtype: データ形式(wide: ワイド形式，tp: 転置形式): [入力データ形式](### 入力データファイル形式)参照 (**必須**)
+1. graph_type: グラフの種類(box: 箱ひげ図，line: 折れ線グラフ) (**必須**)
+1. xlim_min: x軸の最小値 (graph_typeがlineの場合のみ有効)
     * minとmaxが同時に指定されていない場合は適用されない(以下min, max系は同様)
-1. xlim_max: x軸の最大値
+1. xlim_max: x軸の最大値 (graph_typeがlineの場合のみ有効)
 1. ylim_min: y軸の最小値
 1. ylim_max: y軸の最大値
     * bracket_base_yよりも大きい値を指定することを推奨
@@ -137,51 +144,62 @@ output2, data2.csv, FALSE,,,20, 50, condition, parameter2,True:continue.False:st
 
 exampleファイル，brackets系は[参考画像](img/single_ex_description.png)も参照のこと
 
-### データファイル
+### 入力データファイル形式
 
-#### 試行ごとに単発のパラメータとして出力されるもの
+* 対応形式は[schemeta_splitter](https://github.com/sakashita44/schemeta_splitter?tab=readme-ov-file#%E5%AF%BE%E5%BF%9C%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%BD%A2%E5%BC%8F)の対応ファイル形式に準拠する(行/列名は自由だが，メタデータ部分の列/行数は固定)．
+* gen_graph.pyでは列番号指定でデータをグラフ化するため，列が異なる場合は正しいグラフが出力されない．
 
+#### ワイド形式 (wide)
+
+* instructions.csvのdtypeに"wide"を指定する
 * 形式: csv
-    * 1列目: 自由
-    * 2列目: 値
-    * 3列目: 条件
-        * 3列の条件別に箱ひげ図として出力される
-        * 条件名は指示ファイルのlegendで指定したものに対応させる
-    * 4列目: グループ
-        * 4列のグループ別に箱ひげ図として出力される [参考画像](img/single_ex_description.png)
+* メタデータ部分の列数は4列(uid, main_id, sub_id, group)，データ部分の列数は1列以上
+    * メタデータの各列の意味
+        * uid: ユニークID (ファイル内で一意のIDとして扱う)
+        * main_id: メインID (被験者番号等)
+        * sub_id: サブID (試行番号等)
+        * group: グループ (比較条件等: (例: 介入群Aと対照群B等))
+    * データ部分
+        * graph_typeでboxを指定した場合: データ部分の1列目のみが使用される
+        * graph_typeでlineを指定した場合: データ部分の列名がx軸，各列の値がy軸として使用される
+        * いずれの場合も各行が1つのデータとして扱われる
+
+例: uid, main_id, sub_id, groupがメタデータ部分，data1, data2, data3がデータ部分の列名
 
 ```csv
-id, value, condition, group
-1, 10, TRUE, group1
-2, 20, TRUE, group1
-3, 30, TRUE, group2
-4, 40, TRUE, group2
-5, 50, FALSE, group1
-6, 60, FALSE, group1
-7, 70, FALSE, group2
-8, 80, FALSE, group2
-9, 90, TRUE, group1
-10, 100, TRUE, group1
+
+uid, main_id, sub_id, group, data1, data2, data3, ...
+1, X, 1, A, 10, 20, 30, ...
+2, X, 2, A, 20, 30, 40, ...
+3, X, 3, B, 30, 40, 50, ...
+4, X, 4, B, 40, 50, 60, ...
+5, Y, 1, A, 50, 60, 70, ...
+6, Y, 2, A, 60, 70, 80, ...
+7, Y, 3, B, 70, 80, 90, ...
+8, Y, 4, B, 80, 90, 100, ...
+...
 
 ```
 
-#### 試行ごとに時系列データとして出力されるもの
+#### 転置形式 (tp)
 
-例: 歩行時の関節角度
-
+* instructions.csvのdtypeに"tp"を指定する
 * 形式: csv
-    * 1列目: frame(フレーム番号)
-    * 2列目以降: 値
-        * 2列目以降のヘッダ毎に平均を実線，標準偏差を網掛けでプロットしたグラフが出力される
-        * ヘッダ名は指示ファイルのlegendで指定したものに対応させることで凡例を変更可能
+* ワイド形式の転置形式
+
+例
 
 ```csv
-frame, condition1, condition1, condition2, condition2
-1, 10, 20, 30, 40
-2, 20, 30, 40, 50
-3, 30, 40, 50, 60
-4, 40, 50, 60, 70
-5, 50, 60, 70, 80
+
+uid, 1, 2, 3, 4, 5, 6, 7, 8, ...
+main_id, X, X, X, X, Y, Y, Y, Y, ...
+sub_id, 1, 2, 3, 4, 1, 2, 3, 4, ...
+group, A, A, B, B, A, A, B, B, ...
+data1, 10, 20, 30, 40, 50, 60, 70, 80, ...
+data2, 20, 30, 40, 50, 60, 70, 80, 90, ...
+data3, 30, 40, 50, 60, 70, 80, 90, 100, ...
+...
+
 ```
 
 ### config.yml
