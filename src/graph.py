@@ -26,6 +26,7 @@ class graph:
     ):
         """seaborn.boxplotに処理を追加した関数
         箱ひげ図を作成し, 各箱ひげ図に平均値をプロットする
+        さらに, jitterを追加することも可能
 
         Args:
             data: pandas.DataFrame
@@ -235,6 +236,7 @@ def box_mean_plot(
 ):
     """seaborn.boxplotに処理を追加した関数
     箱ひげ図を作成し, 各箱ひげ図に平均値をプロットする
+    さらに, jitterを追加することも可能
 
     Args:
         data: pandas.DataFrame
