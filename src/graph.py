@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from matplotlib import patches
+from plot_defaults import SWARMPLOT_DEFAULTS, PLOT_DEFAULTS
 
 
 class graph:
@@ -318,10 +319,7 @@ def add_jitter_plot(ax, data, x, y, hue=None, **kwargs):
     handles, labels = ax.get_legend_handles_labels()
 
     # swarmplotのデフォルト引数
-    swarmplot_args = {
-        "marker": "o",
-        "alpha": 0.7,
-    }
+    swarmplot_args = SWARMPLOT_DEFAULTS.copy()
 
     # kwargsがある場合はswarmplot_argsに追加
     swarmplot_args.update(kwargs)
@@ -369,12 +367,7 @@ def add_mean_plot(ax, data, x, y, hue=None, **kwargs):
     """
 
     # plotのデフォルト引数
-    plot_args = {
-        "color": "black",
-        "marker": "+",
-        "markersize": 10,
-        "markeredgewidth": 1,
-    }
+    plot_args = PLOT_DEFAULTS.copy()
 
     # kwargsがある場合はplot_argsに追加
     plot_args.update(kwargs)
@@ -537,9 +530,11 @@ def add_brackets_for_boxplot(
     if not brackets:
         return ax
 
+    # x軸のラベルを取得
     xtick_labels = [x.get_text() for x in ax.get_xticklabels()]
     xtick_len = len(xtick_labels)
 
+    # 凡例のラベルを取得
     legend_labels = (
         [lb.get_text() for lb in ax.get_legend().get_texts()]
         if ax.get_legend()
@@ -547,35 +542,81 @@ def add_brackets_for_boxplot(
     )
     legend_len = len(legend_labels)
 
+    # 各ブラケットの形式をチェック
     for b in brackets:
         check_bracket(b, xtick_len, legend_len)
 
+    # ブラケットの高さと間隔を計算
     bracket_height = h_ratio * get_graph_area(ax)[0]
     bracket_hspace = hspace_ratio * get_graph_area(ax)[0]
     ph = bracket_height
 
+    # 基準となるy座標を設定
     if bracket_base_y is None:
         bracket_base_y = ax.get_ylim()[1]
 
     base_y = bracket_base_y
 
+    # ブラケットの位置を計算
     brackets_pos_list = convert_brackets_to_positions(
         ax, brackets, legend_labels, base_y, bracket_height
     )
     brackets_pos_list = sorted(brackets_pos_list, key=lambda x: x["x2"] - x["x1"])
 
+    # ブラケットの位置を調整
     brackets_confirmed = adjust_bracket_positions(
         brackets_pos_list, base_y, bracket_height, bracket_hspace
     )
 
+    # ブラケットをプロット
     plot_brackets(ax, brackets_confirmed, ph, fs)
 
     return ax
 
 
 def convert_brackets_to_positions(ax, brackets, legend_labels, y_base, bracket_height):
+    """
+    ブラケットの位置情報を計算する関数
+
+    Args:
+        ax: matplotlib.pyplot.Axes
+            * box_mean_plotで作成した箱ひげ図の格納されたax
+        brackets: list of tuple([int, int], [int, int], str)
+            * 1つのブラケットはtuple([int, int], [int, int], str)で指定
+                * タプルの要素1: 1つめの箱ひげ図の位置を指定するためのインデックス([int, int])
+                    * 1つ目のint: x軸のインデックス(int)
+                    * 2つ目のint: hueのインデックス(int)
+                * タプルの要素2: 2つめの箱ひげ図の位置を指定するためのインデックス([int, int])
+                    * 1つ目のint: x軸のインデックス(int)
+                    * 2つ目のint: hueのインデックス(int)
+                * タプルの要素3: p値を示す文字列(str)
+            * すべてのインデックスは1始まり
+            * hueが存在しない場合はhueのインデックスは1を指定
+        legend_labels: list
+            * 凡例のラベル
+        y_base: float
+            * ブラケットの基準位置
+        bracket_height: float
+            * ブラケットの高さ
+
+    Returns:
+        brackets_pos_list: list of dict
+            * ブラケットの位置情報 (引数bracketsに対応)
+            * dictのkey
+                * x1: float
+                    * ブラケットの左端のx座標
+                * x2: float
+                    * ブラケットの右端のx座標
+                * mark: str
+                    * ブラケットの中に表示する文字列
+                * y_bottom: float
+                    * ブラケットの下端のy座標
+                * y_bar: float
+                    * ブラケットの上端のy座標
+    """
     brackets_pos_list = []
     for b in brackets:
+        # ブラケットのx座標を計算
         x1 = get_boxcenter_x(
             get_boxwidth(ax), b[0][0] - 1, b[0][1] - 1, len(legend_labels)
         )
@@ -583,7 +624,8 @@ def convert_brackets_to_positions(ax, brackets, legend_labels, y_base, bracket_h
             get_boxwidth(ax), b[1][0] - 1, b[1][1] - 1, len(legend_labels)
         )
         if x2 < x1:
-            x1, x2 = x2, x1
+            x1, x2 = x1, x2
+        # ブラケットの位置情報を追加
         brackets_pos_list.append(
             {
                 "x1": x1,
@@ -597,12 +639,52 @@ def convert_brackets_to_positions(ax, brackets, legend_labels, y_base, bracket_h
 
 
 def adjust_bracket_positions(brackets_pos_list, base_y, bracket_height, bracket_hspace):
+    """
+    ブラケットの高さを調整して，ブラケット同士が重ならないように座標を調整する関数
+
+    Args:
+        brackets_pos_list: list of dict
+            * ブラケットの位置情報
+            * dictのkey
+                * x1: float
+                    * ブラケットの左端のx座標
+                * x2: float
+                    * ブラケットの右端のx座標
+                * mark: str
+                    * ブラケットの中に表示する文字列
+                * y_bottom: float
+                    * ブラケットの下端のy座標
+                * y_bar: float
+                    * ブラケットの上端のy座標
+        base_y: float
+            * ブラケットの基準位置
+        bracket_height: float
+            * ブラケットの高さ
+        bracket_hspace: float
+            * ブラケットの高さ間隔
+
+    Returns:
+        brackets_confirmed: list of dict
+            * ブラケットの位置情報 (引数bracketsに対応)
+            * dictのkey
+                * x1: float
+                    * ブラケットの左端のx座標
+                * x2: float
+                    * ブラケットの右端のx座標
+                * mark: str
+                    * ブラケットの中に表示する文字列
+                * y_bottom: float
+                    * ブラケットの下端のy座標
+                * y_bar: float
+    """
     brackets_confirmed = []
     for i, b in enumerate(brackets_pos_list):
         if i == 0:
+            # 最初のブラケットの位置を設定
             b["y_bottom"] = base_y
             b["y_bar"] = base_y + bracket_height
         else:
+            # 他のブラケットの位置を調整
             b["y_bottom"] = search_y_pos(
                 brackets_confirmed, b, base_y, bracket_height, bracket_hspace
             )
@@ -613,12 +695,14 @@ def adjust_bracket_positions(brackets_pos_list, base_y, bracket_height, bracket_
 
 def plot_brackets(ax, brackets_confirmed, ph, fs):
     for b in brackets_confirmed:
+        # ブラケットをプロット
         ax.plot(
             [b["x1"], b["x1"], b["x2"], b["x2"]],
             [b["y_bottom"], b["y_bar"], b["y_bar"], b["y_bottom"]],
             lw=1,
             color="black",
         )
+        # p値をプロット
         ax.text(
             (b["x1"] + b["x2"]) / 2,
             ph + b["y_bar"],
