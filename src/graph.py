@@ -857,8 +857,8 @@ def line_mean_sd_plot(data: pd.DataFrame, order=None, marks=[], **kwargs):
             data_mean_sd[col + "_mean"] = data_tmp[0]
             data_mean_sd[col + "_std"] = 0
         else:
-            data_mean_sd[col + "_mean"] = data_tmp.mean(axis=1)
-            data_mean_sd[col + "_std"] = data_tmp.std(axis=1)
+            data_mean_sd[col + "_mean"] = data_tmp.mean(axis=1)  # type: ignore
+            data_mean_sd[col + "_std"] = data_tmp.std(axis=1)  # type: ignore
 
         # グラフを作成
         ax = sns.lineplot(
@@ -957,8 +957,8 @@ def series_describe(data: pd.DataFrame):
             data_mean_sd[col + "_mean"] = data_tmp
             data_mean_sd[col + "_std"] = 0
         else:
-            data_mean_sd[col + "_mean"] = data_tmp.mean(axis=1)
-            data_mean_sd[col + "_std"] = data_tmp.std(axis=1)
+            data_mean_sd[col + "_mean"] = data_tmp.mean(axis=1)  # type: ignore
+            data_mean_sd[col + "_std"] = data_tmp.std(axis=1)  # type: ignore
 
         data_ms.append(data_mean_sd)
         if len(data_tmp.shape) == 1:
