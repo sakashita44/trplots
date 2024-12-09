@@ -181,15 +181,29 @@ def gen_box_graph(
         # data[x]の値をすべて空文字に変換することでxで分割しない
         data[x] = ""
 
-    ax = graph.box_mean_plot(data=data, ax=ax, x=x, y=y, hue=hue, hue_order=hue_order)
+    ax = graph.box_mean_plot(
+        data=data,
+        ax=ax,
+        x=x,
+        y=y,
+        hue=hue,
+        hue_order=hue_order,
+        jitter_setting={
+            "marker": "o",
+            "hue_order": hue_order,
+            "linewidth": 1,
+            "alpha": 0.7,
+        },
+    )
 
-    if config["add_brackets"]:
+    if config["show_significance_brackets"]:
         if inst["brackets"] != []:
             graph.add_brackets_for_boxplot(
                 ax=ax,
                 brackets=inst["brackets"],
                 bracket_base_y=inst["bracket_base_y"],
-                dh=config["brackets_dh"],
+                h_ratio=config["brackets_height_ratio"],
+                hspace_ratio=config["brackets_spacing_ratio"],
                 fs=config["p_mark_font_size"],
             )
 
