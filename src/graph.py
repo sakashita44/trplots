@@ -1,3 +1,4 @@
+from operator import ne
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
@@ -1116,14 +1117,13 @@ def set_ax(
             handles.insert(0, hd_tmp)
 
     # legendを設定
-    # 時系列データの場合は同じ文字列が複数表示されるのを防ぐ処理を追加
-    if graph_type == "line":
-        # 凡例に同じ文字列が複数表示されるのを防ぐ
-        handles, labels = ax.get_legend_handles_labels()
-        by_label = dict(zip(new_labels, handles))
-        ax.legend(by_label.values(), by_label.keys(), fontsize=legend_font_size)
-    elif graph_type == "box":
-        ax.legend(handles, new_labels, fontsize=legend_font_size)
+    # 凡例に同じ文字列が複数表示されるのを防ぐ
+    # reversedを使って逆順にすることで，dict化した際に最初に出現したものが優先され, あとから出現する同じラベルが削除される
+    by_label = dict(zip(reversed(new_labels), reversed(handles)))
+    # reversedしなおすことで，元の順番に戻す
+    hd = reversed(by_label.values())
+    lb = reversed(by_label.keys())
+    ax.legend(hd, lb, fontsize=legend_font_size)
 
     return ax
 
