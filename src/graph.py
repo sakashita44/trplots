@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
-import matplotlib
 import seaborn as sns
 import pandas as pd
+from matplotlib import patches
 
 
 class graph:
@@ -140,7 +140,6 @@ class graph:
         ylabel,
         xlim=None,
         ylim=None,
-        graph_type="box",
         legend_correspondence_dict={},
         label_font_size=None,
         tick_font_size=None,
@@ -161,7 +160,6 @@ class graph:
             ylabel: str
             xlim: tuple
             ylim: tuple
-            graph_type: str
             legend_correspondence_dict: dict
             label_font_size: int
             tick_font_size: int
@@ -175,6 +173,16 @@ class graph:
             ylabel_loc_x: float
             ylabel_loc_y: float
         """
+
+        if "box_mean_plot" in self._graphs_in_ax:
+            graph_type = "box"
+        elif "line_mean_sd_plot" in self._graphs_in_ax:
+            graph_type = "line"
+        elif "line_group_coloring_plot" in self._graphs_in_ax:
+            graph_type = "line"
+        else:
+            raise ValueError("graph type is not specified")
+
         self._ax = set_ax(
             ax,
             xlabel,
@@ -444,8 +452,7 @@ def get_boxwidth(ax):
     xlists = []
     for i, patch in enumerate(ax.patches):
         # パスの頂点（vertices）を取得してx座標を計算
-        # PathPatch以外の場合はスキップ
-        if type(patch) == matplotlib.patches.Rectangle:
+        if isinstance(patch, patches.Rectangle):
             continue
         path = patch.get_path()
         vertices = path.vertices
