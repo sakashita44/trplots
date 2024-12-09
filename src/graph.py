@@ -133,17 +133,15 @@ class graph:
         self._ax = line_group_coloring_plot(data, order, marks, color_palette, **kwargs)
         self._graphs_in_ax.append("line_group_coloring_plot")
 
-    def set_ax(
+    def configure_ax(
         self,
         ax,
         xlabel,
         ylabel,
         xlim=None,
         ylim=None,
-        legend_correspondence_dict={},
         label_font_size=None,
         tick_font_size=None,
-        legend_font_size=None,
         graph_limit_left=None,
         graph_limit_right=None,
         graph_limit_bottom=None,
@@ -152,48 +150,57 @@ class graph:
         xlabel_loc_y=None,
         ylabel_loc_x=None,
         ylabel_loc_y=None,
+        legend_correspondence_dict={},
+        legend_kwargs={},
+        **kwargs,
     ):
-        """
+        """axにラベル, 凡例, 軸の設定を追加する関数
+
         Args:
             ax: matplotlib.pyplot.Axes
             xlabel: str
+                x軸のラベル
             ylabel: str
-            xlim: tuple
-            ylim: tuple
-            legend_correspondence_dict: dict
+                y軸のラベル
+            xlim: list
+                x軸の表示範囲
+            ylim: list
+                y軸の表示範囲
             label_font_size: int
+                ラベルのフォントサイズ
             tick_font_size: int
-            legend_font_size: int
+                軸の目盛りのフォントサイズ
             graph_limit_left: float
+                グラフの左端の位置
             graph_limit_right: float
+                グラフの右端の位置
             graph_limit_bottom: float
+                グラフの下端の位置
             graph_limit_top: float
+                グラフの上端の位置
             xlabel_loc_x: float
+                x軸ラベルの位置(x座標)
             xlabel_loc_y: float
+                x軸ラベルの位置(y座標)
             ylabel_loc_x: float
+                y軸ラベルの位置(x座標)
             ylabel_loc_y: float
+                y軸ラベルの位置(y座標)
+            legend_correspondence_dict: dict
+                凡例のラベルを置換するための辞書
+            legend_kwargs: dict
+                凡例の設定
+            **kwargs:
+                ax.set()に渡す引数
         """
-
-        if "box_mean_plot" in self._graphs_in_ax:
-            graph_type = "box"
-        elif "line_mean_sd_plot" in self._graphs_in_ax:
-            graph_type = "line"
-        elif "line_group_coloring_plot" in self._graphs_in_ax:
-            graph_type = "line"
-        else:
-            raise ValueError("graph type is not specified")
-
-        self._ax = set_ax(
+        self._ax = configure_ax(
             ax,
             xlabel,
             ylabel,
             xlim,
             ylim,
-            graph_type,
-            legend_correspondence_dict,
             label_font_size,
             tick_font_size,
-            legend_font_size,
             graph_limit_left,
             graph_limit_right,
             graph_limit_bottom,
@@ -202,8 +209,10 @@ class graph:
             xlabel_loc_y,
             ylabel_loc_x,
             ylabel_loc_y,
+            legend_correspondence_dict,
+            legend_kwargs,
+            **kwargs,
         )
-        return self._ax
 
     @property
     def graphs_in_ax(self):
@@ -219,7 +228,7 @@ def box_mean_plot(
     x,
     y,
     hue=None,
-    flierprops={"marker": "x", "markersize": 10},
+    is_add_jitter=False,
     jitter_setting={},
     mean_setting={},
     **kwargs,
@@ -240,14 +249,14 @@ def box_mean_plot(
         hue: str
             hueの列名 (dataの列名) (省略可能)
             大分類の中での分類
-        flierprops: dict
-            * seaborn.boxplotに渡す引数
-            * 外れ値のマーカーの設定
+        is_add_jitter: bool
+            * jitterを追加するかどうか
         jitter_setting: dict
             * seaborn.swarmplotに渡す引数
             * 省略可能
         mean_setting: dict
-
+            * ax.plotに渡す引数
+            * 省略可能
         **kwargs:
             seaborn.boxplotに渡す引数
 
@@ -255,32 +264,20 @@ def box_mean_plot(
         ax: matplotlib.pyplot.Axes (作成したグラフが入ったax)
     """
 
-    # dfのxとhueのタイプをstrに変換
+    # dataとして入力されたdfのx列とhue列の型をstrに変換
     data[x] = data[x].astype(str)
     if hue is not None:
         data[hue] = data[hue].astype(str)
 
-    # sns.boxplotに渡す引数を抽出
-    boxplot_args = {
-        key: kwargs[key] for key in kwargs if key in sns.boxplot.__code__.co_varnames
-    }
-
     # 箱ひげ図を作成
-    ax = sns.boxplot(
-        x=x,
-        y=y,
-        hue=hue,
-        data=data,
-        flierprops=flierprops,
-        **boxplot_args,
-    )
+    ax = sns.boxplot(x=x, y=y, hue=hue, data=data, **kwargs)
 
     # jitterを追加
-    if any(jitter_setting):
-        ax = add_jitter_plot(ax, data, x, y, hue, jitter_setting)
+    if is_add_jitter:
+        ax = add_jitter_plot(ax=ax, data=data, x=x, y=y, hue=hue, **jitter_setting)
 
     # 箱ひげ図に外れ値を除いた平均値をプロット
-    ax = add_mean_plot(ax, data, x, y, hue, mean_setting)
+    ax = add_mean_plot(ax=ax, data=data, x=x, y=y, hue=hue, **mean_setting)
 
     # 空の凡例を削除
     if hue is None:
@@ -290,7 +287,7 @@ def box_mean_plot(
     return ax
 
 
-def add_jitter_plot(ax, data, x, y, hue=None, jitter_setting={}):
+def add_jitter_plot(ax, data, x, y, hue=None, **kwargs):
     """box_mean_plotで作成した箱ひげ図にjitterをプロットする関数
 
     Args:
@@ -308,9 +305,8 @@ def add_jitter_plot(ax, data, x, y, hue=None, jitter_setting={}):
         hue: str
             hueの列名 (dataの列名) (省略可能)
             大分類の中での分類
-        jitter_setting: dict
-            * jitterをプロットする際の引数
-            * 省略可能
+        **kwargs:
+            seaborn.swarmplotに渡す引数
 
     Returns:
         ax: matplotlib.pyplot.Axes
@@ -319,20 +315,14 @@ def add_jitter_plot(ax, data, x, y, hue=None, jitter_setting={}):
     # 現在のlegendを保存
     handles, labels = ax.get_legend_handles_labels()
 
-    # swarmplotの引数を設定
+    # swarmplotのデフォルト引数
     swarmplot_args = {
-        key: jitter_setting[key]
-        for key in jitter_setting
-        if key in sns.swarmplot.__code__.co_varnames
+        "marker": "o",
+        "alpha": 0.7,
     }
-    if "marker" not in jitter_setting:
-        swarmplot_args["marker"] = "o"
-    else:
-        swarmplot_args["marker"] = jitter_setting["marker"]
-    if "alpha" not in jitter_setting:
-        swarmplot_args["alpha"] = 0.7
-    else:
-        swarmplot_args["alpha"] = jitter_setting["alpha"]
+
+    # kwargsがある場合はswarmplot_argsに追加
+    swarmplot_args.update(kwargs)
 
     ax = sns.swarmplot(
         x=x,
@@ -343,6 +333,7 @@ def add_jitter_plot(ax, data, x, y, hue=None, jitter_setting={}):
         **swarmplot_args,
     )
     # swarmplotで追加したlegendのみを削除
+    # 別の場所で改めてax.legendを実行した場合，削除したlegendが復活するので注意
     if hue is not None:
         ax.get_legend().remove()
     ax.legend(handles, labels)
@@ -350,7 +341,7 @@ def add_jitter_plot(ax, data, x, y, hue=None, jitter_setting={}):
     return ax
 
 
-def add_mean_plot(ax, data, x, y, hue=None, mean_setting={}):
+def add_mean_plot(ax, data, x, y, hue=None, **kwargs):
     """box_mean_plotで作成した箱ひげ図に, 外れ値を除いた平均値をプロットする関数
 
     Args:
@@ -368,36 +359,23 @@ def add_mean_plot(ax, data, x, y, hue=None, mean_setting={}):
         hue: str
             hueの列名 (dataの列名) (省略可能)
             大分類の中での分類
-        mean_setting: dict
-            * 平均値をプロットする際の引数
-            * 省略可能
+        **kwargs:
+            ax.plotに渡す引数
 
     Returns:
         ax: matplotlib.pyplot.Axes
     """
 
-    # plotの引数を設定
-    mean_plot_args = {
-        key: mean_setting[key]
-        for key in mean_setting
-        if key in ax.plot.__code__.co_varnames
+    # plotのデフォルト引数
+    plot_args = {
+        "color": "black",
+        "marker": "+",
+        "markersize": 10,
+        "markeredgewidth": 1,
     }
-    if "color" not in mean_setting:
-        mean_plot_args["color"] = "black"
-    else:
-        mean_plot_args["color"] = mean_setting["color"]
-    if "marker" not in mean_setting:
-        mean_plot_args["marker"] = "+"
-    else:
-        mean_plot_args["marker"] = mean_setting["marker"]
-    if "markersize" not in mean_setting:
-        mean_plot_args["markersize"] = 10
-    else:
-        mean_plot_args["markersize"] = mean_setting["markersize"]
-    if "markeredgewidth" not in mean_setting:
-        mean_plot_args["markeredgewidth"] = 1
-    else:
-        mean_plot_args["markeredgewidth"] = mean_setting["markeredgewidth"]
+
+    # kwargsがある場合はplot_argsに追加
+    plot_args.update(kwargs)
 
     # 箱ひげ図の幅を取得
     boxwidth = get_boxwidth(ax)
@@ -441,7 +419,7 @@ def add_mean_plot(ax, data, x, y, hue=None, mean_setting={}):
             ax.plot(
                 x_cood,
                 [df_tmp[y].mean()],
-                **mean_plot_args,
+                **plot_args,
             )
 
     return ax
@@ -976,17 +954,14 @@ def series_describe(data: pd.DataFrame):
     return describe
 
 
-def set_ax(
+def configure_ax(
     ax,
     xlabel,
     ylabel,
     xlim=None,
     ylim=None,
-    graph_type="box",
-    legend_correspondence_dict={},
     label_font_size=None,
     tick_font_size=None,
-    legend_font_size=None,
     graph_limit_left=None,
     graph_limit_right=None,
     graph_limit_bottom=None,
@@ -995,9 +970,11 @@ def set_ax(
     xlabel_loc_y=None,
     ylabel_loc_x=None,
     ylabel_loc_y=None,
+    legend_correspondence_dict={},
+    legend_kwargs={},
+    **kwargs,
 ):
-    """axに対してconfig.ymlで指定したデフォルトのフォントサイズを設定する
-    同時にx軸，y軸のラベル名を設定し，グラフの大きさを設定する
+    """axに対して設定を行う関数
 
     Args:
         ax: matplotlib.pyplot.Axes
@@ -1012,14 +989,10 @@ def set_ax(
         graph_type: str
             グラフの種類
             "box": 箱ひげ図, "line": 折れ線グラフ
-        legend_correspondence_dict: dict
-            凡例のラベルを変更するための辞書
         label_font_size: int
             ラベルのフォントサイズ
         tick_font_size: int
             目盛りのフォントサイズ
-        legend_font_size: int
-            凡例のフォントサイズ
         graph_limit_left: float
             グラフの左端の位置
         graph_limit_right: float
@@ -1036,10 +1009,20 @@ def set_ax(
             y軸ラベルの位置(x位置)
         ylabel_loc_y: float
             y軸ラベルの位置(y位置)
+        legend_correspondence_dict: dict
+            凡例のラベルを変更するための辞書
+        legend_kwargs: dict
+            ax.legendに渡す引数
+        **kwargs:
+            ax.setに渡す引数
 
     Returns:
         ax: matplotlib.pyplot.Axes
     """
+
+    for key, value in kwargs.items():
+        ax.set(**{key: value})
+
     # フォントサイズを設定
     if label_font_size is not None:
         ax.set_xlabel(xlabel, fontsize=label_font_size)
@@ -1075,6 +1058,26 @@ def set_ax(
         ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
+
+    # 凡例の設定
+    set_legend(ax, legend_correspondence_dict, **legend_kwargs)
+
+    return ax
+
+
+def set_legend(ax, legend_correspondence_dict, **kwargs):
+    """axに対して凡例を設定する関数
+    legend_correspondence_dictを用いて凡例のラベルを変更する
+    また，凡例で同じ文字列が複数表示されないようにする
+
+    Args:
+        ax: matplotlib.pyplot.Axes
+        legend_correspondence_dict: dict
+            凡例のラベルを変更するための辞書
+
+    Returns:
+        ax: matplotlib.pyplot.Axes
+    """
 
     # 現在のlegendを取得し，対応する新しいlegendを作成
     handles, labels = ax.get_legend_handles_labels()
@@ -1122,7 +1125,7 @@ def set_ax(
     # reversedしなおすことで，元の順番に戻す
     hd = reversed(by_label.values())
     lb = reversed(by_label.keys())
-    ax.legend(hd, lb, fontsize=legend_font_size)
+    ax.legend(hd, lb, **kwargs)
 
     return ax
 
