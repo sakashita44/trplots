@@ -14,15 +14,16 @@ graph_limit_left: 0.2  # グラフの描画範囲の左限，画像の幅を1と
 graph_limit_right: 0.9  # グラフの描画範囲の右限，画像の幅を1としたときの割合(デフォルト: 0.9)
 
 figure_dpi: 100       # 画像の解像度(デフォルト: 100)
-figure_width:  8      # 画像の幅(デフォルト: 4?)
-figure_height: 6      # 画像の高さ(デフォルト: 3?)
+figure_width:  8      # 画像の幅(デフォルト: 4)
+figure_height: 6      # 画像の高さ(デフォルト: 3)
 
 # 箱ひげ図への有意差の表示に関する設定
-add_brackets: True    # 箱ひげ図に有意差を示すかどうか(デフォルト: True)
-brackets_dh: 5        # ブラケット同士の間隔(デフォルト: 5)
-p_mark_font_size: 10  # p値のフォントサイズ(デフォルト: 10): dhが小さいときにfont_sizeを大きくすると線と重なるので注意
+show_significance_brackets: True  # 箱ひげ図に有意差を示すかどうか(デフォルト: True)
+brackets_height_ratio: 0.02       # グラフの高さを1としたときのブラケットの高さ割合(デフォルト: 0.02)
+brackets_spacing_ratio: 0.06      # グラフの高さを1としたときのブラケット間隔の割合(デフォルト: 0.06)
+p_mark_font_size: 10              # p値のフォントサイズ(デフォルト: 10)
 
 # 保存時の設定
 show_graph: False     # グラフ保存時に表示するか(デフォルト: False)
 save_describe: True   # 保存時にデータの概要を保存するかどうか(デフォルト: True)
-save_individual: True # 時系列データのグラフ化時に，個々のデータをプロットした画像も保存するか(デフォルト: True)
+save_individual: True # 時系列データのグラフ化時に，個々のデータをプロットした画像を追加で保存するか(デフォルト: True)
