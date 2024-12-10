@@ -1,7 +1,7 @@
 import seaborn as sns
 import pandas as pd
 from matplotlib import patches
-from plot_defaults import SWARMPLOT_DEFAULTS, PLOT_DEFAULTS
+from .plot_defaults import SWARMPLOT_DEFAULTS, PLOT_DEFAULTS
 
 
 def box_mean_plot(
@@ -107,6 +107,7 @@ def add_jitter_plot(ax, data, x, y, hue=None, **kwargs):
     swarmplot_args.update(kwargs)
 
     ax = sns.swarmplot(
+        ax=ax,
         x=x,
         y=y,
         hue=hue,
@@ -751,7 +752,24 @@ def line_group_coloring_plot(
     列名毎に色分けして個別に線グラフをプロットする
 
     Args:
+        data: pandas.DataFrame
+            * index: x軸の値
+            * 各列: データ
+                * 列名が同じ列をまとめて色分けしてプロットする
+        order: list
+            * 凡例の順番を指定
+            * 省略可能
+        marks: list
+            * 凡例のマーカーを指定(系列数より多い必要がある)
+            * 省略した場合はマーカーなし
+        color_palette: list
+            * 色のリスト
+            * 省略した場合はseabornのデフォルトカラーパレット
+        **kwargs:
+            seaborn.lineplotに渡す引数
 
+    Returns:
+        ax: matplotlib.pyplot.Axes
     """
     # 時系列グラフの元データを作成
     unique_cols = data.columns.unique()
