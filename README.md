@@ -15,3 +15,5 @@
 ![個別系列グラフ](img/ts_ex_individual.png)
 
 </details>
+
+## インストール
