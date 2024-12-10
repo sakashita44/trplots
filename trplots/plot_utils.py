@@ -401,17 +401,37 @@ def convert_brackets_to_positions(
     brackets_pos_list = []
     for b in brackets:
         # ブラケットのx座標を計算
+        if b[0][0] not in xtick_labels:
+            raise ValueError("the label of brackets is not in xtick_labels")
+        if b[0][1] not in legend_labels and b[0][1] != "":
+            raise ValueError("the label of brackets is not in legend_labels")
+        if b[1][0] not in xtick_labels:
+            raise ValueError("the label of brackets is not in xtick_labels")
+        if b[1][1] not in legend_labels and b[1][1] != "":
+            raise ValueError("the label of brackets is not in legend_labels")
+
+        # xtick_labelsとlegend_labelsからx座標と凡例が何番目かを取得
+        x1_xtick_id = xtick_labels.index(b[0][0])
+        x2_xtick_id = xtick_labels.index(b[1][0])
+        x1_hue_id = legend_labels.index(b[0][1])
+        x2_hue_id = legend_labels.index(b[1][1])
+
+        # 凡例が空白の場合は0に設定
+        if b[0][1] == "":
+            x1_hue_id = 0
+        if b[1][1] == "":
+            x2_hue_id = 0
 
         x1 = get_boxcenter_x(
             box_width,
-            xtick_labels.index(b[0][0]),
-            legend_labels.index(b[0][1]),
+            x1_xtick_id,
+            x1_hue_id,
             len(legend_labels),
         )
         x2 = get_boxcenter_x(
             box_width,
-            xtick_labels.index(b[1][0]),
-            legend_labels.index(b[1][1]),
+            x2_xtick_id,
+            x2_hue_id,
             len(legend_labels),
         )
         if x2 < x1:
