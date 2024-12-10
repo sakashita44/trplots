@@ -435,7 +435,7 @@ def convert_brackets_to_positions(
             len(legend_labels),
         )
         if x2 < x1:
-            x1, x2 = x1, x2
+            x1, x2 = x2, x1
         # ブラケットの位置情報を追加
         brackets_pos_list.append(
             {
