@@ -697,6 +697,13 @@ def line_mean_sd_plot(data: pd.DataFrame, order=None, marks=[], **kwargs):
     if len(marks) == 0:
         marks = [None] * len(unique_cols)
 
+    # **kwargsにmarkeredgecolorが指定されていない場合はデフォルトの色を指定
+    if "markeredgecolor" not in kwargs:
+        markeredgecolor = sns.color_palette()
+    else:
+        markeredgecolor = kwargs["markeredgecolor"]
+        del kwargs["markeredgecolor"]
+
     # もしorderが指定されているにも関わらず, y_col_nameとorder内容が一致しない場合はエラーを出力
     if order is not None and set(unique_cols) != set(order):
         raise ValueError(
@@ -729,8 +736,7 @@ def line_mean_sd_plot(data: pd.DataFrame, order=None, marks=[], **kwargs):
             data=data_mean_sd,
             label=col,
             marker=marks[i],
-            markerfacecolor="none",
-            markeredgecolor=sns.color_palette()[i],
+            markeredgecolor=markeredgecolor[i],
             **kwargs,
         )
         # 平均値に標準偏差を網掛け
@@ -778,6 +784,13 @@ def line_group_coloring_plot(
     if len(marks) == 0:
         marks = [None] * len(unique_cols)
 
+    # **kwargsにmarkeredgecolorが指定されていない場合はデフォルトの色を指定
+    if "markeredgecolor" not in kwargs:
+        markeredgecolor = color_palette
+    else:
+        markeredgecolor = kwargs["markeredgecolor"]
+        del kwargs["markeredgecolor"]
+
     # もしorderが指定されているにも関わらず, unique_colsとorder内容が一致しない場合はエラーを出力
     if order is not None and set(unique_cols) != set(order):
         raise ValueError(
@@ -800,6 +813,8 @@ def line_group_coloring_plot(
             y=series.values,
             label=series.name,
             color=color_palette[colname.index(series.name)],
+            marker=marks[colname.index(series.name)],
+            markeredgecolor=markeredgecolor[colname.index(series.name)],
             **kwargs,
         )
 
