@@ -1,6 +1,7 @@
 from .trplots import (
     SWARMPLOT_DEFAULTS,
     PLOT_DEFAULTS,
+    FLIERPROPS_DEFAULTS,
     TrendPlots,
     box_mean_plot,
     get_boxwidth,
