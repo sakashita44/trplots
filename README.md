@@ -185,6 +185,7 @@ plt.show()
                 * 2つ目のstr: hueのラベル名
             * タプルの要素3: p値を示す文字列(str)
         * hueが存在しない場合はhueのラベル名は空白
+    * 注意: すべてのラベル名はグラフに表示されているものではなく，dataに含まれているものを指定する
 * bracket_base_y: float, optional
     * 有意差を表示するy軸の基準位置
 * h_ratio: float, optional
