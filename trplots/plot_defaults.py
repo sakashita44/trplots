@@ -2,6 +2,7 @@
 SWARMPLOT_DEFAULTS = {
     "marker": "o",
     "alpha": 0.7,
+    "linewidth": 1,
 }
 
 # 平均値追加時に使用するplotのデフォルト引数
