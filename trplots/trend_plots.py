@@ -34,7 +34,7 @@ class TrendPlots:
 
         Args:
             data: pandas.DataFrame
-                * x, y, hueで指定された列を持つデータフレーム(ワイド形式)
+                * x, y, hueで指定された列を持つデータフレーム
                     * hueは省略可能
             x: str
                 x軸の列名 (dataの列名)
@@ -45,14 +45,15 @@ class TrendPlots:
             hue: str
                 hueの列名 (dataの列名) (省略可能)
                 大分類の中での分類
-            flierprops: dict
-                * seaborn.boxplotに渡す引数
-                * 外れ値のマーカーの設定
+            is_add_jitter: bool
+                * True: jitterを追加
+                * False: jitterを追加しない
             jitter_setting: dict
                 * seaborn.swarmplotに渡す引数
-                * 省略可能
+                * **kwargsとして渡される
             mean_setting: dict
-
+                * 平均値をプロットする際の設定
+                * **kwargsとして渡される
             **kwargs:
                 seaborn.boxplotに渡す引数
 
