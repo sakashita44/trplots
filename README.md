@@ -9,7 +9,6 @@
 ## インストール
 
 事前にgitがインストールされている必要がある.
-以下はsshでのインストール方法
 
 ```bash
 pip install git+https://github.com/sakashita44/trplots.git
