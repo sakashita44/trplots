@@ -5,7 +5,7 @@ from matplotlib import patches
 from plot_defaults import SWARMPLOT_DEFAULTS, PLOT_DEFAULTS
 
 
-class graph:
+class SimpleTrendPlots:
     def __init__(self, ax):
         """
         Args:
