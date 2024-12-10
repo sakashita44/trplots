@@ -1,4 +1,4 @@
-# SimpleTrendPlots
+# trplots
 
 ## 概要
 
