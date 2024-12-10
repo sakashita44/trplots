@@ -12,7 +12,7 @@
 以下はsshでのインストール方法
 
 ```bash
-pip install git@github.com:sakashita44/trplots.git
+pip install git+https://github.com/sakashita44/trplots.git
 ```
 
 ## 依存パッケージ
