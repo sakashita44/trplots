@@ -277,6 +277,9 @@ def box_mean_plot(
 
     # jitterを追加
     if is_add_jitter:
+        # **kwargs内にhue_orderがある場合かつjitter_setting内にhue_orderがない場合はhue_orderをjitter_settingに追加
+        if "hue_order" in kwargs and "hue_order" not in jitter_setting:
+            jitter_setting["hue_order"] = kwargs["hue_order"]
         ax = add_jitter_plot(ax=ax, data=data, x=x, y=y, hue=hue, **jitter_setting)
 
     # 箱ひげ図に外れ値を除いた平均値をプロット
@@ -333,7 +336,7 @@ def add_jitter_plot(ax, data, x, y, hue=None, **kwargs):
         **swarmplot_args,
     )
     # swarmplotで追加したlegendのみを削除
-    # 別の場所で改めてax.legendを実行した場合，削除したlegendが復活するので注意
+    # 別の場所で改めてax.legendを実行した場合, 削除したlegendが復活するので注意
     if hue is not None:
         ax.get_legend().remove()
     ax.legend(handles, labels)
@@ -461,30 +464,30 @@ def get_boxcenter_x(boxwidth, xtick_id, hue_id, hue_len):
 
     # 偶数の場合
     if hue_len % 2 == 0:
-        # hue_idが半分より前の場合 (例えばhue_len=4の場合，0, 1)
+        # hue_idが半分より前の場合 (例えばhue_len=4の場合, 0, 1)
         if hue_id < hue_len // 2:
             k = -1
-            # 例えばhue_len=4の場合，nは-2か-1になる
+            # 例えばhue_len=4の場合, nは-2か-1になる
             n = abs(hue_id - hue_len // 2)
-        # hue_idが半分より後の場合 (例えばhue_len=4の場合，2, 3)
+        # hue_idが半分より後の場合 (例えばhue_len=4の場合, 2, 3)
         else:
             k = 1
-            # 例えばhue_len=4の場合，nは1か2になる
+            # 例えばhue_len=4の場合, nは1か2になる
             n = hue_id - hue_len // 2 + 1
-        # 中心から1つずれるときはboxwidth/2を加算，2つずれるときは3*boxwidth/2を加算，3つずれるときは5*boxwidth/2を加算...となるのでnがずれの数として
+        # 中心から1つずれるときはboxwidth/2を加算, 2つずれるときは3*boxwidth/2を加算, 3つずれるときは5*boxwidth/2を加算...となるのでnがずれの数として
         x_cood = x_center + ((boxwidth * (n - 1)) + (boxwidth / 2)) * k
 
     # 奇数の場合
     else:
-        # hue_idが真ん中の場合 (例えばhue_len=5の場合，2)
+        # hue_idが真ん中の場合 (例えばhue_len=5の場合, 2)
         if hue_id == hue_len // 2:
             n = 0
             k = 0
-        # hue_idが半分より前の場合 (例えばhue_len=5の場合，0, 1)
+        # hue_idが半分より前の場合 (例えばhue_len=5の場合, 0, 1)
         elif hue_id < hue_len // 2:
             k = -1
             n = abs(hue_id - hue_len // 2)
-        # hue_idが半分より後の場合 (例えばhue_len=5の場合，3, 4)
+        # hue_idが半分より後の場合 (例えばhue_len=5の場合, 3, 4)
         else:
             k = 1
             n = hue_id - hue_len // 2
@@ -542,6 +545,9 @@ def add_brackets_for_boxplot(
     )
     legend_len = len(legend_labels)
 
+    # 箱ひげ図の幅を取得
+    box_width = get_boxwidth(ax)
+
     # 各ブラケットの形式をチェック
     for b in brackets:
         check_bracket(b, xtick_len, legend_len)
@@ -559,7 +565,7 @@ def add_brackets_for_boxplot(
 
     # ブラケットの位置を計算
     brackets_pos_list = convert_brackets_to_positions(
-        ax, brackets, legend_labels, base_y, bracket_height
+        brackets, legend_labels, base_y, bracket_height, box_width
     )
     brackets_pos_list = sorted(brackets_pos_list, key=lambda x: x["x2"] - x["x1"])
 
@@ -574,13 +580,13 @@ def add_brackets_for_boxplot(
     return ax
 
 
-def convert_brackets_to_positions(ax, brackets, legend_labels, y_base, bracket_height):
+def convert_brackets_to_positions(
+    brackets, legend_labels, y_base, bracket_height, box_width
+):
     """
     ブラケットの位置情報を計算する関数
 
     Args:
-        ax: matplotlib.pyplot.Axes
-            * box_mean_plotで作成した箱ひげ図の格納されたax
         brackets: list of tuple([int, int], [int, int], str)
             * 1つのブラケットはtuple([int, int], [int, int], str)で指定
                 * タプルの要素1: 1つめの箱ひげ図の位置を指定するためのインデックス([int, int])
@@ -598,6 +604,8 @@ def convert_brackets_to_positions(ax, brackets, legend_labels, y_base, bracket_h
             * ブラケットの基準位置
         bracket_height: float
             * ブラケットの高さ
+        box_width: float
+            * 箱ひげ図の幅
 
     Returns:
         brackets_pos_list: list of dict
@@ -617,12 +625,8 @@ def convert_brackets_to_positions(ax, brackets, legend_labels, y_base, bracket_h
     brackets_pos_list = []
     for b in brackets:
         # ブラケットのx座標を計算
-        x1 = get_boxcenter_x(
-            get_boxwidth(ax), b[0][0] - 1, b[0][1] - 1, len(legend_labels)
-        )
-        x2 = get_boxcenter_x(
-            get_boxwidth(ax), b[1][0] - 1, b[1][1] - 1, len(legend_labels)
-        )
+        x1 = get_boxcenter_x(box_width, b[0][0] - 1, b[0][1] - 1, len(legend_labels))
+        x2 = get_boxcenter_x(box_width, b[1][0] - 1, b[1][1] - 1, len(legend_labels))
         if x2 < x1:
             x1, x2 = x1, x2
         # ブラケットの位置情報を追加
@@ -640,7 +644,7 @@ def convert_brackets_to_positions(ax, brackets, legend_labels, y_base, bracket_h
 
 def adjust_bracket_positions(brackets_pos_list, base_y, bracket_height, bracket_hspace):
     """
-    ブラケットの高さを調整して，ブラケット同士が重ならないように座標を調整する関数
+    ブラケットの高さを調整して, ブラケット同士が重ならないように座標を調整する関数
 
     Args:
         brackets_pos_list: list of dict
@@ -695,7 +699,7 @@ def adjust_bracket_positions(brackets_pos_list, base_y, bracket_height, bracket_
 
 def plot_brackets(ax, brackets, ph, fs):
     """
-    複数のブラケットをプロットし，各ブラケットにp値を表すマークをプロットする関数
+    複数のブラケットをプロットし, 各ブラケットにp値を表すマークをプロットする関数
 
     Args:
         ax: matplotlib.pyplot.Axes
@@ -943,7 +947,7 @@ def line_mean_sd_plot(data: pd.DataFrame, order=None, marks=[], **kwargs):
     if len(marks) == 0:
         marks = [None] * len(unique_cols)
 
-    # もしorderが指定されているにも関わらず，y_col_nameとorder内容が一致しない場合はエラーを出力
+    # もしorderが指定されているにも関わらず, y_col_nameとorder内容が一致しない場合はエラーを出力
     if order is not None and set(unique_cols) != set(order):
         raise ValueError(
             "order must be the same as the unique value of data column name"
@@ -1007,14 +1011,14 @@ def line_group_coloring_plot(
     if len(marks) == 0:
         marks = [None] * len(unique_cols)
 
-    # もしorderが指定されているにも関わらず，unique_colsとorder内容が一致しない場合はエラーを出力
+    # もしorderが指定されているにも関わらず, unique_colsとorder内容が一致しない場合はエラーを出力
     if order is not None and set(unique_cols) != set(order):
         raise ValueError(
             "order must be the same as the unique value of data column name"
         )
 
     # グラフを作成
-    # colnameをあらかじめorderに追加しておくことで，colnameの順番を固定する
+    # colnameをあらかじめorderに追加しておくことで, colnameの順番を固定する
     colname = order
 
     # dataの列毎に時系列グラフを作成
@@ -1078,7 +1082,7 @@ def series_describe(data: pd.DataFrame):
     describe = pd.concat(data_ms, axis=1)
     describe = describe.describe()
     for cond, cnt in cond_cnt.items():
-        # describeに新しくcond列を追加し，count行にcntを追加
+        # describeに新しくcond列を追加し, count行にcntを追加
         describe.loc["count", cond + "_trial"] = cnt
 
     return describe
@@ -1198,7 +1202,7 @@ def configure_ax(
 def set_legend(ax, legend_correspondence_dict, **kwargs):
     """axに対して凡例を設定する関数
     legend_correspondence_dictを用いて凡例のラベルを変更する
-    また，凡例で同じ文字列が複数表示されないようにする
+    また, 凡例で同じ文字列が複数表示されないようにする
 
     Args:
         ax: matplotlib.pyplot.Axes
@@ -1209,7 +1213,7 @@ def set_legend(ax, legend_correspondence_dict, **kwargs):
         ax: matplotlib.pyplot.Axes
     """
 
-    # 現在のlegendを取得し，対応する新しいlegendを作成
+    # 現在のlegendを取得し, 対応する新しいlegendを作成
     handles, labels = ax.get_legend_handles_labels()
     new_labels = []
     # 新しいlegendを作成
@@ -1250,9 +1254,9 @@ def set_legend(ax, legend_correspondence_dict, **kwargs):
 
     # legendを設定
     # 凡例に同じ文字列が複数表示されるのを防ぐ
-    # reversedを使って逆順にすることで，dict化した際に最初に出現したものが優先され, あとから出現する同じラベルが削除される
+    # reversedを使って逆順にすることで, dict化した際に最初に出現したものが優先され, あとから出現する同じラベルが削除される
     by_label = dict(zip(reversed(new_labels), reversed(handles)))
-    # reversedしなおすことで，元の順番に戻す
+    # reversedしなおすことで, 元の順番に戻す
     hd = reversed(by_label.values())
     lb = reversed(by_label.keys())
     ax.legend(hd, lb, **kwargs)
