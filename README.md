@@ -132,6 +132,13 @@ plt.show()
 
 ### TrendPlotsクラスのメソッド
 
+#### コンストラクタ
+
+引数:
+
+* ax: matplotlib.pyplot.Axes
+    * グラフを描画するためのax
+
 #### add_box_mean_plot
 
 * 箱ひげ図を作成し，各箱の外れ値を除いた平均値を表示する
