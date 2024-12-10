@@ -121,7 +121,7 @@ class TrendPlots:
 
     def add_line_mean_sd_plot(self, data, order=None, marks=[], **kwargs):
         """
-                seaborn.lineplotに処理を追加した関数
+        seaborn.lineplotに処理を追加した関数
         列名毎に平均と標準偏差を線グラフにプロットする
 
         Args:
