@@ -192,7 +192,6 @@ class TrendPlots:
 
     def configure_ax(
         self,
-        ax,
         xlabel,
         ylabel,
         xlim=None,
@@ -251,7 +250,7 @@ class TrendPlots:
                 ax.set()に渡す引数
         """
         self._ax = configure_ax(
-            ax,
+            self._ax,
             xlabel,
             ylabel,
             xlim,
