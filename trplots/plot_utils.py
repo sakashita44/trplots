@@ -244,7 +244,7 @@ def get_boxcenter_x(boxwidth, xtick_id, hue_id, hue_len):
 
     # 偶数の場合
     if hue_len % 2 == 0:
-        # hue_idが半分より前の場合 (例えばhue_len=4の場合, 0, 1)
+        # hue_idが半分より前の場合 (例えばhue_len=4の��合, 0, 1)
         if hue_id < hue_len // 2:
             k = -1
             # 例えばhue_len=4の場合, nは-2か-1になる
@@ -280,24 +280,23 @@ def add_brackets_for_boxplot(
     ax, brackets, bracket_base_y=None, h_ratio=0.02, hspace_ratio=0.1, fs=10
 ):
     """
-    箱ひげ図が追加された状態のaxに[([int, int], [int, int], str), ([int, int], [int, int], str), ...]で指定される有意差を表示する
+    箱ひげ図が追加された状態のaxに[([str, str], [str, str], str), ([str, str], [str, str], str), ...]で指定される有意差を表示する
     箱ひげ図の存在しないaxが与えられた場合の動作は保証しない
 
     Args:
         ax: matplotlib.pyplot.Axes
             * box_mean_plotで作成した箱ひげ図
-        brackets: list of tuple([int, int], [int, int], str)
+        brackets: list of tuple([str, str], [str, str], str)
             * listの要素の数だけブラケットを表示
-            * 1つのブラケットはtuple([int, int], [int, int], str)で指定
-                * タプルの要素1: 1つめの箱ひげ図の位置を指定するためのインデックス([int, int])
-                    * 1つ目のint: x軸のインデックス(int)
-                    * 2つ目のint: hueのインデックス(int)
-                * タプルの要素2: 2つめの箱ひげ図の位置を指定するためのインデックス([int, int])
-                    * 1つ目のint: x軸のインデックス(int)
-                    * 2つ目のint: hueのインデックス(int)
+            * 1つのブラケットはtuple([str, str], [str, str], str)で指定
+                * タプルの要素1: 1つめの箱ひげ図の位置を指定するための名前([str, str])
+                    * 1つ目のstr: x軸のラベル名
+                    * 2つ目のstr: hueのラベル名
+                * タプルの要素2: 2つめの箱ひげ図の位置を指定するための名前([str, str])
+                    * 1つ目のstr: x軸のラベル名
+                    * 2つ目のstr: hueのラベル名
                 * タプルの要素3: p値を示す文字列(str)
-            * すべてのインデックスは1始まり
-            * hueが存在しない場合はhueのインデックスは1を指定
+            * hueが存在しない場合はhueのラベル名は空白
         bracket_base_y: float
             有意差を表示するy軸の基準位置
         h_ratio: float
@@ -315,7 +314,6 @@ def add_brackets_for_boxplot(
 
     # x軸のラベルを取得
     xtick_labels = [x.get_text() for x in ax.get_xticklabels()]
-    xtick_len = len(xtick_labels)
 
     # 凡例のラベルを取得
     legend_labels = (
@@ -323,14 +321,13 @@ def add_brackets_for_boxplot(
         if ax.get_legend()
         else [None]
     )
-    legend_len = len(legend_labels)
 
     # 箱ひげ図の幅を取得
     box_width = get_boxwidth(ax)
 
     # 各ブラケットの形式をチェック
     for b in brackets:
-        check_bracket(b, xtick_len, legend_len)
+        check_bracket(b, xtick_labels, legend_labels)
 
     # ブラケットの高さと間隔を計算
     bracket_height = h_ratio * get_graph_area(ax)[0]
@@ -345,7 +342,7 @@ def add_brackets_for_boxplot(
 
     # ブラケットの位置を計算
     brackets_pos_list = convert_brackets_to_positions(
-        brackets, legend_labels, base_y, bracket_height, box_width
+        brackets, xtick_labels, legend_labels, base_y, bracket_height, box_width
     )
     brackets_pos_list = sorted(brackets_pos_list, key=lambda x: x["x2"] - x["x1"])
 
@@ -361,23 +358,22 @@ def add_brackets_for_boxplot(
 
 
 def convert_brackets_to_positions(
-    brackets, legend_labels, y_base, bracket_height, box_width
+    brackets, xtick_labels, legend_labels, y_base, bracket_height, box_width
 ):
     """
     ブラケットの位置情報を計算する関数
 
     Args:
-        brackets: list of tuple([int, int], [int, int], str)
-            * 1つのブラケットはtuple([int, int], [int, int], str)で指定
-                * タプルの要素1: 1つめの箱ひげ図の位置を指定するためのインデックス([int, int])
-                    * 1つ目のint: x軸のインデックス(int)
-                    * 2つ目のint: hueのインデックス(int)
-                * タプルの要素2: 2つめの箱ひげ図の位置を指定するためのインデックス([int, int])
-                    * 1つ目のint: x軸のインデックス(int)
-                    * 2つ目のint: hueのインデックス(int)
+        brackets: list of tuple([str, str], [str, str], str)
+            * 1つのブラケットはtuple([str, str], [str, str], str)で指定
+                * タプルの要素1: 1つめの箱ひげ図の位置を指定するための名前([str, str])
+                    * 1つ目のstr: x軸のラベル名
+                    * 2つ目のstr: hueのラベル名
+                * タプルの要素2: 2つめの箱ひげ図の位置を指定するための名前([str, str])
+                    * 1つ目のstr: x軸のラベル名
+                    * 2つ目のstr: hueのラベル名
                 * タプルの要素3: p値を示す文字列(str)
-            * すべてのインデックスは1始まり
-            * hueが存在しない場合はhueのインデックスは1を指定
+            * hueが存在しない場合はhueのラベル名は空白
         legend_labels: list
             * 凡例のラベル
         y_base: float
@@ -405,10 +401,41 @@ def convert_brackets_to_positions(
     brackets_pos_list = []
     for b in brackets:
         # ブラケットのx座標を計算
-        x1 = get_boxcenter_x(box_width, b[0][0] - 1, b[0][1] - 1, len(legend_labels))
-        x2 = get_boxcenter_x(box_width, b[1][0] - 1, b[1][1] - 1, len(legend_labels))
+        if b[0][0] not in xtick_labels:
+            raise ValueError("the label of brackets is not in xtick_labels")
+        if b[0][1] not in legend_labels and b[0][1] != "":
+            raise ValueError("the label of brackets is not in legend_labels")
+        if b[1][0] not in xtick_labels:
+            raise ValueError("the label of brackets is not in xtick_labels")
+        if b[1][1] not in legend_labels and b[1][1] != "":
+            raise ValueError("the label of brackets is not in legend_labels")
+
+        # xtick_labelsとlegend_labelsからx座標と凡例が何番目かを取得
+        x1_xtick_id = xtick_labels.index(b[0][0])
+        x2_xtick_id = xtick_labels.index(b[1][0])
+        x1_hue_id = legend_labels.index(b[0][1])
+        x2_hue_id = legend_labels.index(b[1][1])
+
+        # 凡例が空白の場合は0に設定
+        if b[0][1] == "":
+            x1_hue_id = 0
+        if b[1][1] == "":
+            x2_hue_id = 0
+
+        x1 = get_boxcenter_x(
+            box_width,
+            x1_xtick_id,
+            x1_hue_id,
+            len(legend_labels),
+        )
+        x2 = get_boxcenter_x(
+            box_width,
+            x2_xtick_id,
+            x2_hue_id,
+            len(legend_labels),
+        )
         if x2 < x1:
-            x1, x2 = x1, x2
+            x1, x2 = x2, x1
         # ブラケットの位置情報を追加
         brackets_pos_list.append(
             {
@@ -435,7 +462,7 @@ def adjust_bracket_positions(brackets_pos_list, base_y, bracket_height, bracket_
                 * x2: float
                     * ブラケットの右端のx座標
                 * mark: str
-                    * ブラケットの中���表示する文字列
+                    * ブラケットの中に表示する文字列
                 * y_bottom: float
                     * ブラケットの下端のy座標
                 * y_bar: float
@@ -624,7 +651,7 @@ def get_graph_area(ax):
     return graph_area_height, graph_area_width
 
 
-def check_bracket(bracket, xtick_len, legend_len):
+def check_bracket(bracket, xtick_labels, legend_labels):
     """
     bracketが正しい形式であるかをチェックする関数
     正しくない場合はValueErrorを出力
@@ -633,42 +660,42 @@ def check_bracket(bracket, xtick_len, legend_len):
         bracket: tuple
             * 有意差を示すブラケット
             * (group1, group2, pマーク)
-                * group1, group2: 比較するグループのインデックス (1始まり), int
+                * group1, group2: 比較するグループの名前 (str)
                 * p値: 有意差を示すpのマーク, str
-        xtick_len: int
-            x軸のラベルの数
-        legend_len: int
-            凡例のラベルの数
+        xtick_labels: list
+            x軸のラベルのリスト
+        legend_labels: list
+            凡例のラベルのリスト
     """
 
     if len(bracket) != 3:
         raise ValueError(
-            "brackets must be a list of tuple([int, int], [int, int], str)"
+            "brackets must be a list of tuple([str, str], [str, str], str)"
         )
     if len(bracket[0]) != 2 or len(bracket[1]) != 2:
         raise ValueError(
-            "brackets must be a list of tuple([int, int], [int, int], str)"
+            "brackets must be a list of tuple([str, str], [str, str], str)"
         )
     if (
-        not isinstance(bracket[0][0], int)
-        or not isinstance(bracket[0][1], int)
-        or not isinstance(bracket[1][0], int)
-        or not isinstance(bracket[1][1], int)
+        not isinstance(bracket[0][0], str)
+        or not isinstance(bracket[0][1], str)
+        or not isinstance(bracket[1][0], str)
+        or not isinstance(bracket[1][1], str)
     ):
         raise ValueError(
-            "brackets must be a list of tuple([int, int], [int, int], str)"
+            "brackets must be a list of tuple([str, str], [str, str], str)"
         )
     if not isinstance(bracket[2], str):
         raise ValueError(
-            "brackets must be a list of tuple([int, int], [int, int], str)"
+            "brackets must be a list of tuple([str, str], [str, str], str)"
         )
     if (
-        bracket[0][0] > xtick_len
-        or bracket[0][1] > legend_len
-        or bracket[1][0] > xtick_len
-        or bracket[1][1] > legend_len
+        bracket[0][0] not in xtick_labels
+        or bracket[0][1] not in legend_labels
+        or bracket[1][0] not in xtick_labels
+        or bracket[1][1] not in legend_labels
     ):
-        raise ValueError("the index of brackets is out of range")
+        raise ValueError("the label of brackets is out of range")
 
 
 def line_mean_sd_plot(data: pd.DataFrame, order=None, marks=[], **kwargs):

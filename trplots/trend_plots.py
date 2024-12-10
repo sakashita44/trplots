@@ -86,22 +86,21 @@ class TrendPlots:
         self, brackets, bracket_base_y=None, h_ratio=0.02, hspace_ratio=0.1, fs=10
     ):
         """
-        箱ひげ図が追加された状態のaxに[([int, int], [int, int], str), ([int, int], [int, int], str), ...]で指定される有意差を表示する
+        箱ひげ図が追加された状態のaxに[([str, str], [str, str], str), ([str, str], [str, str], str), ...]で指定される有意差を表示する
         箱ひげ図の存在しないaxが与えられた場合の動作は保証しない
 
         Args:
-            brackets: list of tuple([int, int], [int, int], str)
+            brackets: list of tuple([str, str], [str, str], str)
                 * listの要素の数だけブラケットを表示
-                * 1つのブラケットはtuple([int, int], [int, int], str)で指定
-                    * タプルの要素1: 1つめの箱ひげ図の位置を指定するためのインデックス([int, int])
-                        * 1つ目のint: x軸のインデックス(int)
-                        * 2つ目のint: hueのインデックス(int)
-                    * タプルの要素2: 2つめの箱ひげ図の位置を指定するためのインデックス([int, int])
-                        * 1つ目のint: x軸のインデックス(int)
-                        * 2つ目のint: hueのインデックス(int)
+                * 1つのブラケットはtuple([str, str], [str, str], str)で指定
+                    * タプルの要素1: 1つめの箱ひげ図の位置を指定するための名前([str, str])
+                        * 1つ目のstr: x軸のラベル名
+                        * 2つ目のstr: hueのラベル名
+                    * タプルの要素2: 2つめの箱ひげ図の位置を指定するための名前([str, str])
+                        * 1つ目のstr: x軸のラベル名
+                        * 2つ目のstr: hueのラベル名
                     * タプルの要素3: p値を示す文字列(str)
-                * すべてのインデックスは1始まり
-                * hueが存在しない場合はhueのインデックスは1を指定
+                * hueが存在しない場合はhueのラベル名は空白
             bracket_base_y: float
                 有意差を表示するy軸の基準位置
             h_ratio: float
