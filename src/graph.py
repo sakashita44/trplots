@@ -693,16 +693,35 @@ def adjust_bracket_positions(brackets_pos_list, base_y, bracket_height, bracket_
     return brackets_confirmed
 
 
-def plot_brackets(ax, brackets_confirmed, ph, fs):
-    for b in brackets_confirmed:
+def plot_brackets(ax, brackets, ph, fs):
+    """
+    複数のブラケットをプロットし，各ブラケットにp値を表すマークをプロットする関数
+
+    Args:
+        ax: matplotlib.pyplot.Axes
+            * ブラケットをプロットする対象のax
+        brackets: list of dict
+            * ブラケットの位置情報
+            * dictのkey
+                * x1: float
+                    * ブラケットの左端のx座標
+                * x2: float
+                    * ブラケットの右端のx座標
+                * mark: str
+                    * ブラケットの中に表示する文字列
+                * y_bottom: float
+                    * ブラケットの下端のy座標
+                * y_bar: float
+                    * ブラケットの上端のy座標
+        ph: float
+            * マークをプロットするy座標 (ブラケットの上端からの相対位置)
+        fs: int
+            * 有意差マークのフォントサイズ
+    """
+    for b in brackets:
         # ブラケットをプロット
-        ax.plot(
-            [b["x1"], b["x1"], b["x2"], b["x2"]],
-            [b["y_bottom"], b["y_bar"], b["y_bar"], b["y_bottom"]],
-            lw=1,
-            color="black",
-        )
-        # p値をプロット
+        plot_bracket(ax, b["x1"], b["x2"], b["y_bottom"], b["y_bar"])
+        # p値を表す文字列をプロット
         ax.text(
             (b["x1"] + b["x2"]) / 2,
             ph + b["y_bar"],
@@ -711,6 +730,31 @@ def plot_brackets(ax, brackets_confirmed, ph, fs):
             va="center",
             fontsize=fs,
         )
+
+
+def plot_bracket(ax, x1, x2, y_bottom, y_top):
+    """
+    ブラケットをプロットする関数
+
+    Args:
+        ax: matplotlib.pyplot.Axes
+            * ブラケットをプロットする対象のax
+        x1: float
+            * ブラケットの左端のx座標
+        x2: float
+            * ブラケットの右端のx座標
+        y_bottom: float
+            * ブラケットの下端のy座標
+        y_top: float
+            * ブラケットの上端のy座標
+    """
+    # ブラケットをプロット
+    ax.plot(
+        [x1, x1, x2, x2],
+        [y_bottom, y_top, y_top, y_bottom],
+        lw=1,
+        color="black",
+    )
 
 
 def search_y_pos(brackets_confirmed, b, base_y, bracket_height, bracket_hspace):
