@@ -1,3 +1,6 @@
+# boxplotの外れ値のマーカーの設定に使用するデフォルト引数
+FLIERPROPS_DEFAULTS = {"marker": "x", "markersize": 10}
+
 # jitter追加時に使用するswarmplotのデフォルト引数
 SWARMPLOT_DEFAULTS = {
     "marker": "o",
