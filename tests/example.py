@@ -29,12 +29,12 @@ box_data = pd.DataFrame(
 )
 
 line_data = pd.DataFrame(columns=["A", "A", "A", "A", "A", "B", "B", "B", "C", "C"])
-line_data.loc["1"] = [1, 2, 3, 10, 5, 6, 7, 8, 9, 10]
-line_data.loc["2"] = [11, 12, 13, 20, 15, 16, 17, 18, 19, 20]
-line_data.loc["3"] = [21, 22, 23, 30, 25, 26, 27, 28, 29, 30]
-line_data.loc["4"] = [31, 32, 33, 40, 35, 36, 37, 38, 39, 40]
-line_data.loc["5"] = [41, 42, 43, 50, 45, 46, 47, 48, 49, 50]
-line_data.loc["6"] = [51, 52, 53, 60, 55, 56, 57, 58, 59, 60]
+line_data.loc["1"] = [1, 2, 3, 4, 5, 11, 12, 13, 31, 32]
+line_data.loc["2"] = [2, 3, 4, 5, 6, 12, 13, 14, 32, 33]
+line_data.loc["3"] = [3, 4, 5, 6, 7, 13, 14, 15, 33, 34]
+line_data.loc["4"] = [4, 5, 6, 7, 8, 14, 15, 16, 34, 35]
+line_data.loc["5"] = [5, 6, 7, 8, 9, 15, 16, 17, 35, 36]
+line_data.loc["6"] = [6, 7, 8, 9, 10, 16, 17, 18, 36, 37]
 line_data.index = line_data.index.astype(int)
 
 brackets_instructions = [
@@ -44,15 +44,17 @@ brackets_instructions = [
     ([1, 2], [2, 1], "**"),
 ]
 
+markers = ["o", "x", "^"]
+
 # matplotlibのfigure, axesを作成 (axを3つ横に並べる)
-fig, ax = plt.subplots(1, 3, figsize=(15, 4))
+fig, ax = plt.subplots(1, 3, figsize=(15, 5))
 
 # TrendPlotsクラスのインスタンスを作成
 trp_box = trp.TrendPlots(ax[0])
 trp_line_ms = trp.TrendPlots(ax[1])
 trp_line_gc = trp.TrendPlots(ax[2])
 
-# 箱ひげ図の作成
+# 箱ひげ図の作成と見た目の設定
 trp_box.add_box_mean_plot(
     data=box_data,
     x="group",
@@ -68,10 +70,49 @@ trp_box.add_brackets(
     hspace_ratio=0.1,
     fs=10,
 )
-
-# 線グラフの作成 (平均値と標準偏差を表示)
-trp_line_ms.add_line_mean_sd_plot(
-    data=line_data, order=["C", "A", "B"], marks=["o", "x", "^"]
+trp_box.configure_ax(
+    xlabel="Group",
+    ylabel="Value",
+    label_font_size=12,
+    tick_font_size=10,
+    legend_correspondence_dict={"A": "Alpha", "B": "Bravo", "C": "Charlie"},
 )
+
+# 線グラフの作成 (平均値と標準偏差を表示) と見た目の設定
+trp_line_ms.add_line_mean_sd_plot(data=line_data, order=["C", "A", "B"], marks=markers)
+trp_line_ms.configure_ax(
+    xlabel="Time",
+    ylabel="Value",
+    label_font_size=12,
+    tick_font_size=10,
+)
+
+# 線グラフの作成 (グループごとに色分け) と見た目の設定
+trp_line_gc.add_line_group_coloring_plot(
+    data=line_data, order=["C", "A", "B"], marks=markers
+)
+trp_line_gc.configure_ax(
+    xlabel="Time",
+    ylabel="Value",
+    label_font_size=12,
+    tick_font_size=10,
+    legend_correspondence_dict={"A": "Alpha", "B": "Bravo", "C": "Charlie"},
+    legend_kwargs={"loc": "upper left"},
+)
+
+# 各インスタンスに格納されているグラフの名前を表示
+print(f"Graphs in trp_box: {trp_box.graphs_in_ax}")
+# Output: "Graphs in trp_box: ['box_mean_plot', 'add_brackets']"
+
+print(f"Graphs in trp_line_ms: {trp_line_ms.graphs_in_ax}")
+# Output: "Graphs in trp_line_ms: ['line_mean_sd_plot']"
+
+print(f"Graphs in trp_line_gc: {trp_line_gc.graphs_in_ax}")
+# Output: "Graphs in trp_line_gc: ['line_group_coloring_plot']"
+
+# 箱ひげ図が存在するaxesにline_mean_sd_plotを追加する等するとエラーが発生
+# trp_box.add_line_group_coloring_plot(
+#     data=line_data, order=["C", "A", "B"], marks=markers
+# )
 
 plt.show()
