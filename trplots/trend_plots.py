@@ -1,11 +1,11 @@
 import seaborn as sns
-from plot_utils import (
+from .plot_utils import (
     box_mean_plot,
     add_brackets_for_boxplot,
     line_mean_sd_plot,
     line_group_coloring_plot,
 )
-from plot_config import configure_ax
+from .plot_config import configure_ax
 
 
 class TrendPlots:
@@ -23,7 +23,7 @@ class TrendPlots:
         x,
         y,
         hue=None,
-        flierprops={},
+        is_add_jitter=False,
         jitter_setting={},
         mean_setting={},
         **kwargs,
@@ -68,7 +68,15 @@ class TrendPlots:
                 "line_mean_sd_plot and line_group_coloring_plot cannot be used together"
             )
         self._ax = box_mean_plot(
-            data, x, y, hue, flierprops, jitter_setting, mean_setting, **kwargs
+            ax=self._ax,
+            data=data,
+            x=x,
+            y=y,
+            hue=hue,
+            is_add_jitter=is_add_jitter,
+            jitter_setting=jitter_setting,
+            mean_setting=mean_setting,
+            **kwargs,
         )
         self._graphs_in_ax.append("box_mean_plot")
         return self._ax
@@ -112,6 +120,24 @@ class TrendPlots:
         return self._ax
 
     def add_line_mean_sd_plot(self, data, order=None, marks=[], **kwargs):
+        """
+                seaborn.lineplotに処理を追加した関数
+        列名毎に平均と標準偏差を線グラフにプロットする
+
+        Args:
+            data: pandas.DataFrame
+                * index: x軸の値
+                * 各列: データ
+                    * 列名が同じ列をまとめて平均と標準偏差をプロットする
+            order: list
+                * 凡例の順番を指定
+                * 省略可能
+            marks: list
+                * 凡例のマーカーを指定(系列数より多い必要がある)
+                * 省略した場合はマーカーなし
+            **kwargs:
+                seaborn.lineplotに渡す引数
+        """
         # box_mean_plot, line_group_coloring_plotとの併用を禁止
         if (
             "box_mean_plot" in self._graphs_in_ax
@@ -120,13 +146,37 @@ class TrendPlots:
             raise ValueError(
                 "box_mean_plot and line_group_coloring_plot cannot be used together"
             )
-        self._ax = line_mean_sd_plot(data, order, marks, **kwargs)
+        self._ax = line_mean_sd_plot(data, order, marks, ax=self._ax, **kwargs)
         self._graphs_in_ax.append("line_mean_sd_plot")
         return self._ax
 
     def add_line_group_coloring_plot(
         self, data, order=[], marks=[], color_palette=sns.color_palette(), **kwargs
     ):
+        """
+        seaborn.lineplotに処理を追加した関数
+        列名毎に色分けして個別に線グラフをプロットする
+
+        Args:
+            data: pandas.DataFrame
+                * index: x軸の値
+                * 各列: データ
+                    * 列名が同じ列をまとめて色分けしてプロットする
+            order: list
+                * 凡例の順番を指定
+                * 省略可能
+            marks: list
+                * 凡例のマーカーを指定(系列数より多い必要がある)
+                * 省略した場合はマーカーなし
+            color_palette: list
+                * 色のリスト
+                * 省略した場合はseabornのデフォルトカラーパレット
+            **kwargs:
+                seaborn.lineplotに渡す引数
+
+        Returns:
+            ax: matplotlib.pyplot.Axes
+        """
         # box_mean_plot, line_mean_sd_plotとの併用を禁止
         if (
             "box_mean_plot" in self._graphs_in_ax
@@ -135,7 +185,9 @@ class TrendPlots:
             raise ValueError(
                 "box_mean_plot and line_mean_sd_plot cannot be used together"
             )
-        self._ax = line_group_coloring_plot(data, order, marks, color_palette, **kwargs)
+        self._ax = line_group_coloring_plot(
+            data, order, marks, color_palette, ax=self._ax, **kwargs
+        )
         self._graphs_in_ax.append("line_group_coloring_plot")
 
     def configure_ax(
