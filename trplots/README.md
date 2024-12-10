@@ -23,7 +23,15 @@
 * `get_boxcenter_x`: 箱ひげ図の中心のx座標を取得する関数. 外部から呼び出した際の動作は未確認.
 * `add_brackets_for_boxplot`: 箱ひげ図が追加された状態のaxに有意差を表示する関数. box_mean_plotで作成したax以外に使用した場合の動作は未確認.
     * `ax`: matplotlib.pyplot.Axes - box_mean_plotで作成した箱ひげ図
-    * `brackets`: list of tuple([int, int], [int, int], str) - 有意差を表示するブラケットのリスト
+    * `brackets`: list of tuple([str, str], [str, str], str) - 有意差を表示するブラケットのリスト
+        * タプルの要素1: 1つめの箱ひげ図の位置を指定するための名前([str, str])
+            * 1つ目のstr: x軸のラベル名
+            * 2つ目のstr: hueのラベル名
+        * タプルの要素2: 2つめの箱ひげ図の位置を指定するための名前([str, str])
+            * 1つ目のstr: x軸のラベル名
+            * 2つ目のstr: hueのラベル名
+        * タプルの要素3: p値を示す文字列(str)
+        * hueが存在しない場合はhueのラベル名は空白
     * `bracket_base_y`: float - 有意差を表示するy軸の基準位置
     * `h_ratio`: float - 有意差を表示するブラケットの高さの比率 (ブラケットの高さをグラフの縦幅に対する比率で指定)
     * `hspace_ratio`: float - 有意差を表示するブラケットの高さ間隔の比率 (ブラケットの高さ間隔をグラフの縦幅に対する比率で指定)
