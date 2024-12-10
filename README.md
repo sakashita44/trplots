@@ -23,7 +23,7 @@ pip install git@github.com:sakashita44/trplots.git
 
 ## 使用方法
 
-### 例: TrendPlotsクラスを使用してグラフを生成する
+### 例:TrendPlotsクラスを使用してグラフを生成する
 
 ```python
 import pandas as pd
@@ -141,4 +141,134 @@ plt.show()
 
 * data: pd.DataFrame
     * データフレーム
-    * 必須カラム: x, y
+    * 必須カラム: x, yで指定された列名の列
+    * オプションカラム: hueで指定された列名の列
+* x: str
+    * x軸の列名 (dataの列名)
+* y: str
+    * y軸の列名 (dataの列名)
+* hue: str, optional
+    * hueの列名 (dataの列名)
+* is_add_jitter: bool, optional
+    * jitterを追加するかどうか
+* jitter_setting: dict, optional
+    * seaborn.swarmplotに渡す引数
+    * **kwargsとして渡される
+* mean_setting: dict, optional
+    * ax.plotに渡す引数
+    * **kwargsとして渡される
+* **kwargs
+    * seaborn.boxplotに渡す引数
+
+#### add_brackets
+
+* 箱ひげ図が追加された状態のaxに有意差を表示するブラケットを追加する (add_box_mean_plotの後にのみ使用可能)
+
+引数:
+
+* brackets: list of tuple([int, int], [int, int], str)
+    * ブラケットの始点と終点の座標と有意差を示す文字列のリスト
+    * listの要素の数だけブラケットを表示する
+        * 1つのブラケットはtuple([int, int], [int, int], str)で指定
+            * タプルの要素1: 1つめの箱ひげ図の位置を指定するためのインデックス([int, int])
+                * 1つ目のint: x軸のインデックス(int)
+                * 2つ目のint: hueのインデックス(int)
+            * タプルの要素2: 2つめの箱ひげ図の位置を指定するためのインデックス([int, int])
+                * 1つ目のint: x軸のインデックス(int)
+                * 2つ目のint: hueのインデックス(int)
+            * タプルの要素3: p値を示す文字列(str)
+        * すべてのインデックスは1始まり
+        * hueが存在しない場合はhueのインデックスは1を指定
+* bracket_base_y: float, optional
+    * 有意差を表示するy軸の基準位置
+* h_ratio: float, optional
+    * ブラケットの高さ (グラフの縦幅に対する比率)
+* hspace_ratio: float, optional
+    * ブラケットの高さの間隔 (グラフの縦幅に対する比率)
+* fs: int, optional
+    * 有意差マークのフォントサイズ
+
+#### add_line_mean_sd_plot
+
+* 各系列の平均値と標準偏差を表示する線グラフを作成する
+
+引数:
+
+* data: pandas.DataFrame
+    * index: x軸の値
+    * 各列: データ
+        * 列名が同じ列をまとめて平均と標準偏差をプロットする
+* order: list
+    * 凡例の順番を指定
+    * 省略可能
+* marks: list
+    * 凡例のマーカーを指定(系列数より多い必要がある)
+    * 省略した場合はマーカーなし
+* **kwargs:
+    * seaborn.lineplotに渡す引数
+
+#### add_line_group_coloring_plot
+
+* 各系列をグループごとに色分けして表示する線グラフを作成する
+
+引数:
+
+* data: pandas.DataFrame
+    * index: x軸の値
+    * 各列: データ
+        * 列名が同じ列をまとめてプロットする
+* order: list
+    * 凡例の順番を指定
+    * 省略可能
+* marks: list
+    * 凡例のマーカーを指定(系列数より多い必要がある)
+    * 省略した場合はマーカーなし
+* color_palette: list, optional
+    * 色のリスト
+    * 省略した場合はseabornのデフォルトカラーパレットを使用
+* **kwargs:
+    * seaborn.lineplotに渡す引数
+
+#### configure_ax
+
+* axにラベル, 凡例, 軸の設定を追加する
+
+引数:
+
+* xlabel: str
+    * x軸のラベル
+* ylabel: str
+    * y軸のラベル
+* xlim: list, optional
+    * x軸の表示範囲
+* ylim: list, optional
+    * y軸の表示範囲
+* label_font_size: int, optional
+    * ラベルのフォントサイズ
+* tick_font_size: int, optional
+    * 軸の目盛りのフォントサイズ
+* graph_limit_left: float, optional
+    * グラフの左端の位置
+* graph_limit_right: float, optional
+    * グラフの右端の位置
+* graph_limit_bottom: float, optional
+    * グラフの下端の位置
+* graph_limit_top: float, optional
+    * グラフの上端の位置
+* xlabel_loc_x: float, optional
+    * x軸ラベルの位置(x座標)
+* xlabel_loc_y: float, optional
+    * x軸ラベルの位置(y座標)
+* ylabel_loc_x: float, optional
+    * y軸ラベルの位置(x座標)
+* ylabel_loc_y: float, optional
+    * y軸ラベルの位置(y座標)
+* legend_correspondence_dict: dict, optional
+    * 凡例のラベルを置換するための辞書
+        * key: 置換前のラベル
+        * value: 置換後のラベル
+* legend_kwargs: dict, optional
+    * 凡例の設定
+    * ax.legend()に**kwargsとして渡される
+* **kwargs
+    * ax.set()に渡す引数
