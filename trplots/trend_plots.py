@@ -174,9 +174,6 @@ class TrendPlots:
                 * 省略した場合はseabornのデフォルトカラーパレット
             **kwargs:
                 seaborn.lineplotに渡す引数
-
-        Returns:
-            ax: matplotlib.pyplot.Axes
         """
         # box_mean_plot, line_mean_sd_plotとの併用を禁止
         if (
