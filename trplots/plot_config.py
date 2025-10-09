@@ -170,8 +170,12 @@ def set_legend(ax, legend_correspondence_dict, **kwargs):
     # reversedを使って逆順にすることで, dict化した際に最初に出現したものが優先され, あとから出現する同じラベルが削除される
     by_label = dict(zip(reversed(new_labels), reversed(handles)))
     # reversedしなおすことで, 元の順番に戻す
-    hd = reversed(by_label.values())
-    lb = reversed(by_label.keys())
+    # matplotlib.legend expects sequences (it calls len(handles)),
+    # so ensure we pass lists rather than iterator objects.
+    hd = list(by_label.values())
+    lb = list(by_label.keys())
+    hd.reverse()
+    lb.reverse()
     ax.legend(hd, lb, **kwargs)
 
     return ax
