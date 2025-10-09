@@ -7,6 +7,15 @@ and versioning is based on [Semantic Versioning](http://semver.org/).
 
 * 箱ひげ図へのハッチング機能
 
+## [3.0.1] 2025-10-09 (sakashita44)
+
+### Fixed in 3.0.1
+
+* Fix: legend 設定時の TypeError ("object of type 'dict_reversevalueiterator' has no len()") を修正しました。`trplots/plot_config.py` の `set_legend()` で reversed() の戻り値 (iterator) を list に変換してから `ax.legend()` に渡すように変更しました。
+    * 修正コミット: bfbd3f2 (fix/202510/sakashita44/8-legend-iterator-len-fix)
+    * 追加: 回帰テスト `tests/test_legend.py` を追加
+    * バージョン: 3.0.1 (chore(release): bump version to 3.0.1)
+
 ## [3.0.0] 2024-12-04 (sakashita44)
 
 ### Added in 3.0.0
